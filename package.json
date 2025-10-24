@@ -1,0 +1,33 @@
+{
+    "dependencies": {
+        "crypto-js": "^4.2.0",
+        "fusions-ui": "^1.0.8",
+        "jsencrypt": "^3.5.4",
+        "pinia": "^3.0.3"
+    },
+    "id": "mirage-fusions",
+    "name": "TinyWuYou-壁纸",
+    "displayName": "TinyWuYou-壁纸",
+    "version": "1.0.0",
+    "description": "\"TinyWuYou——您的一站式视觉美化专家，提供海量高清壁纸与创意头像，适配手机/电脑/平板全设备，每日更新精选专辑，让每个屏幕都成为艺术品。\"",
+    "keywords": [
+        "uniapp",
+        "vue3",
+        "fusions-ui"
+    ],
+    "dcloudext": {
+        "type": "projecttemplate",
+        "sale": {
+            "regular": {
+                "price": "0.00"
+            },
+            "sourcecode": {
+                "price": "0.00"
+            }
+        }
+    },
+    "uni_modules": {
+        "dependencies": [],
+        "encrypt": []
+    }
+}

@@ -1,0 +1,9 @@
+@font-face {
+    font-family: fontAgile;
+	/* #ifndef MP */
+	src: url('~@/static/css/simplified.ttf');
+	/* #endif */
+	/* #ifdef MP */
+	src: url('https://env-00jxtb4yakpd.normal.cloudstatic.cn/fontFamily/simplified.ttf');
+	/* #endif */
+}

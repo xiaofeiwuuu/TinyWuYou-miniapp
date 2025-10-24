@@ -1,0 +1,67 @@
+{
+	"pages": [
+		{ "name": "index", "path": "pages/index/index" }
+	],
+	"subPackages": [
+		{
+			"root": "packWallpaper",
+			"pages": [
+				{ "name": "commonCategory", "path": "pages/common/category", "style": { "navigationBarTitleText": "分类" } },
+				{ "name": "commonList", "path": "pages/common/list", "style": { "navigationBarTitleText": "图片列表" } },
+				{ "name": "mobileList", "path": "pages/mobile/index", "style": { "navigationBarTitleText": "手机壁纸" } },
+				{ "name": "mobileDetails", "path": "pages/mobile/details", "style": { "navigationBarTitleText": "壁纸详情" } },
+				{ "name": "albumIndex", "path": "pages/album/index", "style": { "navigationBarTitleText": "壁纸专辑" } },
+				{ "name": "albumDetails", "path": "pages/album/details", "style": { "navigationBarTitleText": "专辑详情" } },
+				{ "name": "avatarList", "path": "pages/avatar/index", "style": { "navigationBarTitleText": "头像百变" } },
+				{ "name": "avatarDetails", "path": "pages/avatar/details", "style": { "navigationBarTitleText": "头像详情" } },
+				{ "name": "desktopList", "path": "pages/desktop/index", "style": { "navigationBarTitleText": "电脑壁纸" } },
+				{ "name": "desktopDetails", "path": "pages/desktop/details", "style": { "navigationBarTitleText": "电脑平板详情" } },
+				{ "name": "emojiList", "path": "pages/emoji/index", "style": { "navigationBarTitleText": "表情包" } },
+				{ "name": "emojiDetails", "path": "pages/emoji/details", "style": { "navigationBarTitleText": "表情详情" } },
+				{ "name": "stickerList", "path": "pages/sticker/index", "style": { "navigationBarTitleText": "精美贴纸" } },
+				{ "name": "stickerDetails", "path": "pages/sticker/details", "style": { "navigationBarTitleText": "贴纸详情" } },
+				{ "name": "textList", "path": "pages/text/index", "style": { "navigationBarTitleText": "文案" } },
+				{ "name": "textDetails", "path": "pages/text/details", "style": { "navigationBarTitleText": "文案详情" } },
+				{ "name": "wallpaperSearch", "path": "pages/search/index", "style": { "navigationBarTitleText": "搜索" } },
+				{ "name": "wallpaperSearchList", "path": "pages/search/list", "style": { "navigationBarTitleText": "搜索结果" } }
+			]
+		},
+		{
+			"root": "packPublic",
+			"pages": [
+				{ "name": "aboutUs", "path": "pages/aboutUs/index", "style": { "navigationBarTitleText": "关于我们", "navigationStyle": "default" } },
+				{ "name": "feedback", "path": "pages/feedback/index", "style": { "navigationBarTitleText": "我要吐槽", "navigationStyle": "default" } },
+				{ "name": "question", "path": "pages/question/index", "style": { "navigationBarTitleText": "常见问题", "navigationStyle": "default" } },
+				{ "name": "richText", "path": "pages/richText/index", "style": { "navigationBarTitleText": "", "navigationStyle": "default" } }
+			]
+		},
+		{
+			"root": "packUser",
+			"pages": [
+				{ "name": "redeemCode", "path": "pages/redeemCode/index", "style": { "navigationBarTitleText": "卡密兑换" } },
+				{ "name": "userDownload", "path": "pages/download/index", "style": { "navigationBarTitleText": "我的下载" } },
+				{ "name": "userCollect", "path": "pages/collect/index", "style": { "navigationBarTitleText": "我的收藏" } }
+			]
+		}
+	],
+	"preloadRule": {
+		"pages/index/index": {
+			"network": "all",
+			"packages": ["packWallpaper"]
+		}
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^fu-(.*)": "fusions-ui/components/fu-$1/fu-$1.vue"
+		}
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "TinyWuYou-壁纸",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F8F8F8",
+		"navigationStyle": "custom"
+	},
+	"uniIdRouter": {}
+}
