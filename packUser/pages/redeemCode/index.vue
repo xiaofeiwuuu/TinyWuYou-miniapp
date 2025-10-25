@@ -121,9 +121,16 @@
 					console.error('[VipRedeem] 更新用户信息失败:', err);
 				}
 
+				// 构建成功提示信息
+				let successMsg = `VIP激活成功!获得${res.data.days}天VIP`;
+				if (res.data.rewardCount > 0) {
+					successMsg += `,下载次数+${res.data.rewardCount}`;
+				}
+
 				uni.showToast({
-					title: `VIP激活成功!`,
-					icon: 'success'
+					title: successMsg,
+					icon: 'success',
+					duration: 3000
 				});
 				vipCode.value = '';
 				loadHistory(); // 刷新激活记录

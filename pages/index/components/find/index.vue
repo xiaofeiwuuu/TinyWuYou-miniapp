@@ -36,7 +36,11 @@
 						:key="task.id"
 					>
 						<view class="task-item__icon">
-							<text class="task-icon">{{ getTaskEmoji(task.taskType) }}</text>
+							<TaskIcon
+								:type="task.taskType"
+								:isCompleted="task.isCompleted || isTaskDisabled(task.taskType)"
+								:isDisabled="isTaskDisabled(task.taskType)"
+							/>
 						</view>
 						<view class="task-item__content">
 							<view class="task-item__title">
@@ -47,19 +51,14 @@
 						</view>
 						<view class="task-item__action">
 							<!-- 邀请任务使用分享按钮 -->
-							<button v-if="task.taskType === 'invite'" class="task-item__share-btn" open-type="share">
-								<text class="task-item__share-text">去邀请</text>
+							<button v-if="task.taskType === 'invite' && !task.isCompleted && !isTaskDisabled(task.taskType)" class="task-item__share-btn" open-type="share">
+								<view class="task-item__gold-btn">
+									<text class="task-item__gold-btn-text">{{ getTaskButtonText(task.taskType) }}</text>
+								</view>
 							</button>
 							<!-- 其他任务普通按钮 -->
-							<view v-else-if="!task.isCompleted && !isTaskDisabled(task.taskType)" class="task-item__button" @click="handleTaskClick(task)">
-								<fu-button
-									:text="getTaskButtonText(task.taskType)"
-									width="140rpx"
-									height="56rpx"
-									customStyle="background: #FF6347; color: #ffffff; border: none; border-radius: 28rpx;"
-									fontSize="24"
-									customTextStyle="font-weight: 500; color: #ffffff;"
-								/>
+							<view v-else-if="!task.isCompleted && !isTaskDisabled(task.taskType)" class="task-item__gold-btn" @click="handleTaskClick(task)">
+								<text class="task-item__gold-btn-text">{{ getTaskButtonText(task.taskType) }}</text>
 							</view>
 							<view v-else-if="isTaskDisabled(task.taskType)" class="task-item__disabled">
 								<text class="task-item__disabled-text">已完成</text>
@@ -74,9 +73,9 @@
 			</view>
 
 			<!-- 原生模板广告 -->
-			<view v-if="adStore.adConfig.nativeTemplateId" class="ad-container">
-				<ad-custom :unit-id="adStore.adConfig.nativeTemplateId" ad-intervals="30" />
-			</view>
+			<!-- <view v-if="adStore.adConfig.nativeTemplateId" class="ad-container"> -->
+				<!-- <ad-custom :unit-id="adStore.adConfig.nativeTemplateId" ad-intervals="30" /> -->
+			<!-- </view> -->
 
 			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view>
@@ -89,6 +88,7 @@
 	import { getMiniProgramList } from '@/api/miniprogram.js';
 	import { getTaskList, signIn, checkSignIn, adReward } from '@/api/task.js';
 	import { useAdStore } from '@/stores/ad.js';
+	import TaskIcon from './TaskIcon.vue';
 
 	// Props
 	const props = defineProps({
@@ -311,19 +311,6 @@
 		}
 		// 新人福利始终禁用
 		return taskType === 'newbie';
-	};
-
-	// 获取任务图标 emoji
-	const getTaskEmoji = (taskType) => {
-		const emojiMap = {
-			'watch_ad': '📺',
-			'ad': '📺',
-			'invite': '👥',
-			'sign_in': '✓',
-			'signin': '✓',
-			'newbie': '🎁'
-		};
-		return emojiMap[taskType] || '📋';
 	};
 
 	// 获取任务描述
@@ -678,16 +665,10 @@
 		&__icon {
 			width: 80rpx;
 			height: 80rpx;
-			border-radius: 50%;
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			margin-right: 20rpx;
-		}
-
-		.task-icon {
-			font-size: 40rpx;
 		}
 
 		&__content {
@@ -762,35 +743,41 @@
 
 	// 广告容器
 	.ad-container {
-		margin-top: 40rpx;
 		border-radius: 15rpx;
-		overflow: hidden;
-		background: rgba(255, 255, 255, 0.05);
+		margin: 40rpx auto;
+		display: flex;
+		justify-content: center;
+		// overflow: hidden;
+		// background: rgba(255, 255, 255, 0.05);//
 	}
 
-	// 分享按钮
+	// 分享按钮 (清除原生样式)
 	.task-item__share-btn {
-		width: 140rpx;
-		height: 56rpx;
-		line-height: 56rpx;
-		background: #FF6347;
-		color: #ffffff;
+		background: transparent;
 		border: none;
-		border-radius: 28rpx;
-		font-size: 24rpx;
-		font-weight: 500;
-		text-align: center;
 		padding: 0;
 		margin: 0;
+		line-height: 1;
 
 		&::after {
 			border: none;
 		}
 	}
 
-	.task-item__share-text {
-		color: #ffffff;
+	// 金色标签按钮
+	.task-item__gold-btn {
+		display: flex;
+		align-items: center;
+		padding: 10rpx 30rpx;
+		background: rgba(255, 215, 0, 0.2);
+		border-radius: 28rpx;
+		border: 2rpx solid rgba(255, 215, 0, 0.3);
+		white-space: nowrap;
+	}
+
+	.task-item__gold-btn-text {
+		color: #FFD700;
 		font-size: 24rpx;
-		font-weight: 500;
+		font-weight: bold;
 	}
 </style>
