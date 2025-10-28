@@ -1,8 +1,8 @@
 {
-    "name" : "mirage壁纸",
-    "appid" : "__UNI__DBF0A44",
+    "name" : "TinyWuYou-壁纸",
+    "appid" : "__UNI__GF0AE5EB",
     "description" : "",
-    "versionName" : "1.0.0",
+    "versionName" : "5.2.0",
     "versionCode" : "100",
     "transformPx" : false,
     "app-plus" : {
@@ -45,7 +45,9 @@
         "appid" : "wx5b7ed17627e3f259",
         "setting" : {
             "urlCheck" : false,
-            "minified" : true
+            "minified" : true,
+            "es6" : true,
+            "postcss" : true
         },
         "usingComponents" : true
     },

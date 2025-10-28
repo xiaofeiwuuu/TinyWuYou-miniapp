@@ -32,6 +32,7 @@
 	import { ref, getCurrentInstance, watch } from 'vue';
 	import { collectImage, uncollectImage, downloadImage } from '@/api/user.js';
 	import { useUserStore } from '@/stores/user.js';
+	import { useAdStore } from '@/stores/ad.js';
 
 	/**
 	 * @property {Array} visibleBtn 显示按钮数组
@@ -84,6 +85,7 @@
 	// data数据
 	const { $fu, $mUtil, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 	const userStore = useUserStore();
+	const adStore = useAdStore();
 	const iconSize = ref(24);
 	const iconColor = ref('#FFFFFF');
 	let isLike = ref(false);
@@ -157,9 +159,6 @@
 
 	// 下载图片
 	const onDownload = async () => {
-		console.log('[Wallpaper Btn] 点击下载按钮')
-		console.log('[Wallpaper Btn] props.data:', props.data)
-
 		if (!props.data.id) {
 			console.error('[Wallpaper Btn] 缺少图片ID')
 			$fu.toast('图片信息错误')
@@ -172,38 +171,30 @@
 			return
 		}
 
-		console.log('[Wallpaper Btn] 开始下载,图片ID:', props.data.id)
-		console.log('[Wallpaper Btn] 图片URL:', props.data.image)
-
 		uni.showLoading({
 			title: '保存中...'
 		})
 
 		try {
 			// 1. 先记录下载历史
-			console.log('[Wallpaper Btn] 调用下载API...')
 			await downloadImage(props.data.id)
-			console.log('[Wallpaper Btn] 下载API调用成功')
-
+ 
 			// 2. 下载图片到本地
-			console.log('[Wallpaper Btn] 开始下载文件...')
 			uni.downloadFile({
 				url: props.data.image,
 				success: res => {
-					console.log('[Wallpaper Btn] 下载文件成功, statusCode:', res.statusCode)
 					if(res.statusCode === 200) {
 						const isVideo = /\.mp4$/i.test(res.tempFilePath);
-						console.log('[Wallpaper Btn] 是否视频:', isVideo)
 						// #ifndef H5
 						if (isVideo) {
-							console.log('[Wallpaper Btn] 保存视频到相册...')
 							uni.saveVideoToPhotosAlbum({
 								filePath: res.tempFilePath,
 								success: () => {
-									console.log('[Wallpaper Btn] 视频保存成功')
 									$fu.toast('保存成功！')
 									// 刷新用户信息(更新下载次数)
 									userStore.refreshUserInfo()
+									// 显示插屏广告
+									showInterstitialAdIfNeeded()
 								},
 								fail: err => {
 									console.error('[Wallpaper Btn] 视频保存失败:', err)
@@ -211,14 +202,14 @@
 								}
 							});
 						} else {
-							console.log('[Wallpaper Btn] 保存图片到相册...')
 							uni.saveImageToPhotosAlbum({
 								filePath: res.tempFilePath,
 								success: () => {
-									console.log('[Wallpaper Btn] 图片保存成功')
 									$fu.toast('保存成功！')
 									// 刷新用户信息(更新下载次数)
 									userStore.refreshUserInfo()
+									// 显示插屏广告
+									showInterstitialAdIfNeeded()
 								},
 								fail: err => {
 									console.error('[Wallpaper Btn] 图片保存失败:', err)
@@ -228,7 +219,6 @@
 						}
 						// #endif
 						// #ifdef H5
-						console.log('[Wallpaper Btn] H5平台,预览图片')
 						uni.previewImage({
 							urls: [res.tempFilePath]
 						})
@@ -243,7 +233,6 @@
 					$fu.toast('下载失败, 请稍后再试~')
 				},
 				complete: () => {
-					console.log('[Wallpaper Btn] 下载流程完成')
 					uni.hideLoading()
 				}
 			})
@@ -273,6 +262,55 @@
 	const handleVisible = (e) => {
 		return props.visibleBtn.includes(e)
 	};
+
+	// 显示插屏广告(非会员)
+	const showInterstitialAdIfNeeded = () => {
+		// 检查是否是会员
+		if (userStore.isVip === 1) {
+			console.log('[Wallpaper Btn] 会员用户,跳过广告')
+			return
+		}
+
+		const adUnitId = adStore.adConfig.interstitialId
+		if (!adUnitId) {
+			console.log('[Wallpaper Btn] 未配置插屏广告')
+			return
+		}
+
+		// 延迟500毫秒展示,避免与下载提示冲突
+		setTimeout(() => {
+			showInterstitialAd(adUnitId)
+		}, 500)
+	}
+
+	// 显示插屏广告
+	const showInterstitialAd = (adUnitId) => {
+		// #ifdef MP-WEIXIN
+		if (typeof wx !== 'undefined' && wx.createInterstitialAd) {
+			try {
+				const ad = wx.createInterstitialAd({ adUnitId })
+
+				ad.onLoad(() => {
+					console.log('[Wallpaper Btn] 插屏广告加载成功')
+				})
+
+				ad.onError((err) => {
+					console.warn('[Wallpaper Btn] 插屏广告加载失败:', err)
+				})
+
+				ad.show().catch((err) => {
+					if (err.errCode === 2001) {
+						console.warn('[Wallpaper Btn] 广告展示时机受限,稍后再试')
+					} else {
+						console.warn('[Wallpaper Btn] 广告展示失败:', err.errMsg)
+					}
+				})
+			} catch (error) {
+				console.warn('[Wallpaper Btn] 创建插屏广告失败:', error)
+			}
+		}
+		// #endif
+	}
 </script>
 
 <style lang="scss">

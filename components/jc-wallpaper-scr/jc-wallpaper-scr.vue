@@ -1,7 +1,7 @@
 <template>
 	<view>
-		<scroll-view scroll-x>
-			<view :id="elId" class="wallpaper-scr-box" :style="[wallpaperStyle]">
+		<scroll-view scroll-x :style="[wallpaperStyle]">
+			<view :id="elId" class="wallpaper-scr-box" >
 				<view
 					class="wallpaper-scr-box__item"
 					v-for="(item,index) in displayList"

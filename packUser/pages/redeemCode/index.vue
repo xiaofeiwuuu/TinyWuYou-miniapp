@@ -129,7 +129,7 @@
 
 				uni.showToast({
 					title: successMsg,
-					icon: 'success',
+					icon: 'none',
 					duration: 3000
 				});
 				vipCode.value = '';

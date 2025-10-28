@@ -29,10 +29,10 @@
 		{
 			"root": "packPublic",
 			"pages": [
-				{ "name": "aboutUs", "path": "pages/aboutUs/index", "style": { "navigationBarTitleText": "关于我们", "navigationStyle": "default" } },
+				{ "name": "aboutUs", "path": "pages/aboutUs/index", "style": { "navigationBarTitleText": "关于我们", "navigationStyle": "custom" } },
 				{ "name": "feedback", "path": "pages/feedback/index", "style": { "navigationBarTitleText": "我要吐槽", "navigationStyle": "default" } },
-				{ "name": "question", "path": "pages/question/index", "style": { "navigationBarTitleText": "常见问题", "navigationStyle": "default" } },
-				{ "name": "richText", "path": "pages/richText/index", "style": { "navigationBarTitleText": "", "navigationStyle": "default" } }
+				{ "name": "question", "path": "pages/question/index", "style": { "navigationBarTitleText": "常见问题", "navigationStyle": "custom" } },
+				{ "name": "richText", "path": "pages/richText/index", "style": { "navigationBarTitleText": "", "navigationStyle": "custom" } }
 			]
 		},
 		{
@@ -53,6 +53,7 @@
 	"easycom": {
 		"autoscan": true,
 		"custom": {
+			"^fu-image$": "@/components/fu-image/fu-image.vue",
 			"^fu-(.*)": "fusions-ui/components/fu-$1/fu-$1.vue"
 		}
 	},

@@ -72,11 +72,6 @@
 				</view>
 			</view>
 
-			<!-- 原生模板广告 -->
-			<!-- <view v-if="adStore.adConfig.nativeTemplateId" class="ad-container"> -->
-				<!-- <ad-custom :unit-id="adStore.adConfig.nativeTemplateId" ad-intervals="30" /> -->
-			<!-- </view> -->
-
 			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view>
 	</view>
@@ -172,7 +167,7 @@
 		// 等待 token 就绪后再加载需要登录的接口
 		waitForToken().then(() => {
 			loadTasks();
-			checkSignStatus();
+			// checkSignStatus();
 		});
 
 		// 不需要登录的接口可以立即调用
@@ -206,24 +201,27 @@
 	});
 
 	// 分享给好友
-	onShareAppMessage(() => {
-		const userId = getUserId();
-		return {
-			title: 'TinyWuYou-壁纸 精美壁纸头像等你来拿！',
-			path: `/pages/index/index?inviterId=${userId}`,
-			imageUrl: $mAssetsPath.banner || ''
-		};
-	});
+	// onShareAppMessage(() => {
+	// 	const userId = getUserId();
+	// 	console.log(888, userId);
+		
+	// 	return {
+	// 		title: 'TinyWuYou-壁纸 精美壁纸头像等你来拿！',
+	// 		path: `/pages/index/index?inviterId=${userId}`,
+	// 		// query: `inviterId=${userId}`,
+	// 		imageUrl: $mAssetsPath.banner || ''
+	// 	};
+	// });
 
 	// 分享到朋友圈
-	onShareTimeline(() => {
-		const userId = getUserId();
-		return {
-			title: 'TinyWuYou-壁纸 精美壁纸头像等你来拿！',
-			query: `inviterId=${userId}`,
-			imageUrl: $mAssetsPath.banner || ''
-		};
-	});
+	// onShareTimeline(() => {
+	// 	const userId = getUserId();
+	// 	return {
+	// 		title: 'TinyWuYou-壁纸 精美壁纸头像等你来拿！',
+	// 		query: `inviterId=${userId}`,
+	// 		imageUrl: $mAssetsPath.banner || ''
+	// 	};
+	// });
 
 	// 初始化激励视频广告
 	const initRewardedVideoAd = () => {
@@ -385,7 +383,7 @@
 				} else {
 					uni.showToast({
 						title: `签到成功!获得 ${res.data.rewardCount} 次下载`,
-						icon: 'success'
+						icon: 'none',
 					});
 
 					// 更新签到状态
@@ -475,7 +473,7 @@
 			if (res.code === 0) {
 				uni.showToast({
 					title: `次数 +${res.data.rewardCount}`,
-					icon: 'success'
+					icon: 'none',
 				});
 
 				// 更新用户信息中的下载次数
@@ -739,16 +737,6 @@
 				margin-left: 5rpx;
 			}
 		}
-	}
-
-	// 广告容器
-	.ad-container {
-		border-radius: 15rpx;
-		margin: 40rpx auto;
-		display: flex;
-		justify-content: center;
-		// overflow: hidden;
-		// background: rgba(255, 255, 255, 0.05);//
 	}
 
 	// 分享按钮 (清除原生样式)

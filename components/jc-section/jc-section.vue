@@ -7,8 +7,8 @@
 			<fu-text :text="props.desc" color="#555555" :size="props.descSize"></fu-text>
 		</view>
 		<slot>
-			<fu-button bgColor="#333333" height="40" padding="0 12rpx" color="#999999" shape="round" size="sm" fontSize="28" @click="$emit('click')" v-if="showRight">
-				<span class="fu-m-r-5">More</span>
+			<fu-button bgColor="#333333" height="40" padding="0 20rpx" color="#999999" shape="round"  fontSize="28" @click="$emit('click')" v-if="showRight">
+				<span class="fu-m-r-5">更多</span>
 				<span class="fu-m-t-4">+</span>
 			</fu-button>
 		</slot>

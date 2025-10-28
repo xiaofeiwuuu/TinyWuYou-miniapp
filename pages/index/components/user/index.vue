@@ -92,6 +92,11 @@
 					</fu-button>
 				</view>
 			</view>
+
+			<!-- 原生模板广告 -->
+			<view v-if="adStore.adConfig.nativeTemplateId" class="ad-container fu-m-t-40">
+				<ad-custom :unit-id="adStore.adConfig.nativeTemplateId" ad-intervals="30" />
+			</view>
 		</view>
 	</view>
 </template>
@@ -99,6 +104,7 @@
 <script setup>
 	import { getCurrentInstance, computed, onMounted, watch } from 'vue';
 	import { useUserStore } from '@/stores/user.js';
+	import { useAdStore } from '@/stores/ad.js';
 
 	// 接收父组件传递的 isActive prop
 	const props = defineProps({
@@ -113,6 +119,9 @@
 
 	// 使用 user store
 	const userStore = useUserStore();
+
+	// 使用 ad store
+	const adStore = useAdStore();
 
 	// 直接从 store 获取用户信息,避免重复定义
 	const userInfo = computed(() => userStore.userInfo || {
@@ -241,5 +250,13 @@
 		color: #ffffff;
 		font-size: 26rpx;
 	}
+}
+
+// 广告容器
+.ad-container {
+	border-radius: 15rpx;
+	margin: 40rpx auto;
+	display: flex;
+	justify-content: center;
 }
 </style>

@@ -26,12 +26,12 @@ async function request(options) {
 
 		while (!exchangeSuccess && retryCount < 2) {
 			try {
-				console.log(`[Request] 开始密钥交换 (尝试 ${retryCount + 1}/2)`)
+ 
 				await keyManager.exchangeKey()
 
 				// 验证密钥是否真的交换成功
 				if (keyManager.isKeyExchanged()) {
-					console.log(`[Request] ✅ 密钥交换成功`)
+ 
 					exchangeSuccess = true
 				} else {
 					throw new Error('密钥交换完成但密钥不可用')
@@ -64,14 +64,14 @@ async function request(options) {
 	// 准备请求数据
 	let requestData = options.data || {}
 	const aesKey = keyManager.getAesKey()
-	console.log(`[Request] ${url} - 获取AES密钥:`, aesKey ? `存在(${aesKey.substring(0, 8)}...)` : '不存在')
+ 
 
 	// 加密请求数据
 	if (needEncrypt && aesKey && requestData && Object.keys(requestData).length > 0) {
 		try {
 			const encrypted = CryptoUtil.aesEncrypt(JSON.stringify(requestData), aesKey)
 			requestData = { encrypted }
-			console.log(`[Request] ✅ 加密请求数据: ${url}`)
+ 
 		} catch (error) {
 			console.error('[Request] 加密失败:', error)
 		}
@@ -95,8 +95,6 @@ async function request(options) {
 			data: requestData,
 			header: headers,
 			success: (res) => {
-				console.log(`[Response] ${url} - 状态码:`, res.statusCode)
-
 				// 处理 401 未授权错误 (token 失效)
 				if (res.statusCode === 401) {
 					console.warn('[Response] Token 失效，清除本地数据并触发重新登录')
@@ -107,7 +105,6 @@ async function request(options) {
 					uni.removeStorageSync('__client_id__')
 					uni.removeStorageSync('__aes_key__')
 					keyManager.clearKeys()
-
 					uni.showToast({
 						title: '登录已失效，请重新打开小程序',
 						icon: 'none',
@@ -122,7 +119,6 @@ async function request(options) {
 					console.warn('[Response] 服务端密钥已过期，使用原 clientId 重新交换密钥')
 					keyManager.clearKeys()
 					keyManager.exchangeKey().then(() => {
-						console.log('[Response] 密钥交换成功，请重新请求')
 						uni.showToast({
 							title: '密钥已更新,请重试',
 							icon: 'none'
@@ -135,11 +131,8 @@ async function request(options) {
 				// 接受 2xx 范围的状态码
 				if (res.statusCode >= 200 && res.statusCode < 300) {
 					let responseData = res.data
-					console.log(`[Response] ${url} - 原始响应:`, JSON.stringify(responseData).substring(0, 200))
-
 					// 解密响应数据
 					if (needEncrypt && responseData?.encrypted) {
-						console.log(`[Response] ${url} - 检测到加密响应，开始解密`)
 						if (!aesKey) {
 							console.warn('[Response] 收到加密响应但本地无密钥')
 							uni.removeStorageSync('__client_id__')
@@ -150,11 +143,8 @@ async function request(options) {
 						}
 
 						try {
-							console.log(`[Response] 加密内容长度:`, responseData.encrypted.length)
 							const decryptedData = CryptoUtil.aesDecrypt(responseData.encrypted, aesKey)
-							console.log(`[Response] 解密后的数据:`, decryptedData.substring(0, 10000))
 							responseData = JSON.parse(decryptedData)
-							console.log(`[Response] ✅ 解密响应数据: ${url}`)
 						} catch (error) {
 							console.error('[Response] 解密失败:', error)
 							console.error('[Response] 加密的内容:', responseData.encrypted?.substring(0, 100))
@@ -167,8 +157,6 @@ async function request(options) {
 					} else if (needEncrypt) {
 						console.warn(`[Response] ${url} - 需要加密但响应未加密！`)
 					}
-
-					console.log(`[Response] ${url} - 最终数据:`, JSON.stringify(responseData).substring(0, 200))
 					resolve(responseData)
 				} else {
 					console.error(`[Response] ${url} - 请求失败:`, res.statusCode, res.data)

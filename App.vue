@@ -1,24 +1,22 @@
 <script>
 	import { wxLogin } from '@/api/auth.js'
-	import { keyManager } from '@/util/key-manager.js'
 	import { useUserStore } from '@/stores/user.js'
 
 	export default {
-		onLaunch: async function() {
-			console.log('App Launch')
+		globalData: {
+			hasAutoLogin: false // 标记是否已经自动登录过
+		},
 
-			// 初始化密钥管理器
-			// await keyManager.init()
-
-			// 自动登录
-			await this.autoLogin()
-
+		onLaunch: async function(options) {
 			// 初始化用户 store (从缓存加载)
 			const userStore = useUserStore()
 			userStore.loadFromCache()
+
+			// 尝试自动登录
+			await this.tryAutoLogin(options)
 		},
-		onShow: function() {
-			console.log('App Show')
+
+		onShow: async function(options) {
 			// #ifndef H5 || APP || MP-HARMONY
 			if (uni.canIUse('getUpdateManager')) {
 			    const updateManager = uni.getUpdateManager();
@@ -40,30 +38,32 @@
 			    });
 			    updateManager.onUpdateFailed(function() {
 					uni.showModal({
-						title: '已经有新版本了哟\~',
-						content: '新版本已经上线啦\~,请您删除当前小程序,重新搜索打开哟\~'
+						title: '已经有新版本了哟~',
+						content: '新版本已经上线啦~,请您删除当前小程序,重新搜索打开哟~'
 					});
 			    });
 			}
 			// #endif
 		},
+
 		onHide: function() {
-			console.log('App Hide')
+			console.log('[App] 👋 App Hide')
 		},
+
 		methods: {
 			/**
-			 * 自动登录
+			 * 尝试自动登录
 			 */
-			async autoLogin() {
+			async tryAutoLogin(options) {
 				try {
-					// 检查是否已有 token
-					// const token = uni.getStorageSync('token')
-					// if (token) {
-					// 	console.log('[App] 已有 token，跳过登录')
-					// 	return
-					// }
+					// 检查用户是否已登录
+					const userStore = useUserStore()
+					if (userStore.isLogin && userStore.token) {
+						this.globalData.hasAutoLogin = true
+						return
+					}
 
-					// 获取当前平台标识
+					// 获取平台标识
 					let platform = 'weixin'
 					// #ifdef MP-WEIXIN
 					platform = 'weixin'
@@ -78,8 +78,6 @@
 					platform = 'alipay'
 					// #endif
 
-					console.log('[App] 开始小程序登录, 平台:', platform)
-
 					// 调用小程序登录获取 code
 					const loginRes = await new Promise((resolve, reject) => {
 						uni.login({
@@ -89,42 +87,38 @@
 					})
 
 					if (!loginRes.code) {
-						console.error('[App] 获取登录 code 失败')
 						return
 					}
 
-					console.log('[App] 获取到 code:', loginRes.code)
+					// 获取邀请者ID (从启动参数)
+					let inviterId = ''
 
-					// 从启动参数获取邀请者ID
-					const launchOptions = uni.getLaunchOptionsSync && uni.getLaunchOptionsSync()
-					const inviterId = launchOptions?.query?.inviterId || ''
-
-					if (inviterId) {
-						console.log('[App] 检测到邀请者ID:', inviterId)
+					// 方式1: 从启动 options 的 query 获取
+					if (options && options.query && options.query.inviterId) {
+						inviterId = options.query.inviterId
 					}
 
-					// 调用后端登录接口,传入平台标识和邀请者ID
-					const res = await wxLogin(loginRes.code, '', '', platform, inviterId)
+					const res = await wxLogin(loginRes.code, '', '', platform, inviterId || '')
 
-					if (res.code === 0 && res.data.accessToken) {
+					if (res && res.code === 0 && res.data && res.data.accessToken) {
 						// 保存 token
 						uni.setStorageSync('token', res.data.accessToken)
-						console.log('[App] 登录成功，token 已保存')
 
 						// 保存用户信息
 						if (res.data.userInfo) {
 							uni.setStorageSync('userInfo', JSON.stringify(res.data.userInfo))
-							console.log('[App] 用户信息已保存:', res.data.userInfo)
-
-							// 同步更新到 store
-							const userStore = useUserStore()
+							// 更新 store
 							userStore.loadFromCache()
 						}
+
+						// 标记已登录
+						this.globalData.hasAutoLogin = true
 					} else {
-						console.error('[App] 登录失败:', res.message)
+						console.error('[App] ❌ 登录失败，返回数据:', res)
 					}
 				} catch (error) {
-					console.error('[App] 登录异常:', error)
+					console.error('[App] ❌ 自动登录异常:', error)
+					console.error('[App] 错误堆栈:', error.stack)
 				}
 			}
 		}
@@ -143,7 +137,7 @@
 		font-family: "黑体", "Microsoft YaHei", "STHeiti", sans-serif;
 		font-size: 28rpx;
 	}
-	
+
 	/* 全局隐藏滚动条 */
 	/* #ifndef APP-NVUE */
 	::-webkit-scrollbar {
@@ -152,19 +146,19 @@
 		color: transparent;
 	}
 	/* #endif */
-	
+
 	.button-hover {
 		background-color: transparent !important;
 	}
-	
+
 	.font-family {
 		font-family: fontAgile;
 	}
-	
+
 	:deep(.fu-nav-bar-text) {
 		font-weight: bold;
 	}
-	
+
 	.navbar__content {
 		:deep(.fu-navbar__content) {
 		  @media (prefers-reduced-motion: no-preference) {
