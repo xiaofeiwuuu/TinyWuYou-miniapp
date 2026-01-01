@@ -68,11 +68,15 @@
 	// 生命周期
 	onMounted(() => {
 		initChildren()
+		// #ifdef H5
 		window.addEventListener('resize', initChildren);
+		// #endif
 	});
-	
+
 	onBeforeUnmount(() => {
+		// #ifdef H5
 		window.removeEventListener('resize', initChildren);
+		// #endif
 	});
 	
 	// computed计算属性

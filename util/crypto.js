@@ -27,6 +27,19 @@ export class CryptoUtil {
 	}
 
 	/**
+	 * 生成随机 WordArray（小程序兼容）
+	 * @param {number} nBytes 字节数
+	 */
+	static generateRandomWordArray(nBytes) {
+		const words = []
+		for (let i = 0; i < nBytes; i += 4) {
+			// 使用 Math.random() 生成 32 位随机数
+			words.push((Math.random() * 0x100000000) | 0)
+		}
+		return CryptoJS.lib.WordArray.create(words, nBytes)
+	}
+
+	/**
 	 * AES 加密
 	 * 使用 AES-256-CBC
 	 */
@@ -35,8 +48,8 @@ export class CryptoUtil {
 			// 将密钥转换为 WordArray (key是hex字符串)
 			const keyWordArray = CryptoJS.enc.Hex.parse(key)
 
-			// 生成随机 IV
-			const iv = CryptoJS.lib.WordArray.random(16)
+			// 生成随机 IV（使用小程序兼容方式）
+			const iv = this.generateRandomWordArray(16)
 
 			// 加密
 			const encrypted = CryptoJS.AES.encrypt(data, keyWordArray, {

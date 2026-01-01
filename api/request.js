@@ -14,8 +14,10 @@ const skipRoutes = [
 
 /**
  * 封装的请求方法（支持加密通信）
+ * @param {Object} options 请求选项
+ * @param {boolean} isRetry 是否为重试请求（内部使用）
  */
-async function request(options) {
+async function request(options, isRetry = false) {
 	const url = options.url || ''
 	const needEncrypt = !skipRoutes.some(route => url.includes(route))
 
@@ -116,15 +118,24 @@ async function request(options) {
 
 				// 处理 428 密钥过期错误
 				if (res.statusCode === 428 || res.data?.needKeyExchange) {
-					console.warn('[Response] 服务端密钥已过期，使用原 clientId 重新交换密钥')
+					// 防止无限重试
+					if (isRetry) {
+						console.error('[Response] 重试后仍然密钥过期，放弃请求')
+						reject(new Error('密钥交换失败'))
+						return
+					}
+
+					console.warn('[Response] 服务端密钥已过期，重新交换密钥后自动重试')
 					keyManager.clearKeys()
-					keyManager.exchangeKey().then(() => {
-						uni.showToast({
-							title: '密钥已更新,请重试',
-							icon: 'none'
+
+					// 重新交换密钥后自动重试原请求
+					keyManager.exchangeKey()
+						.then(() => {
+							console.log('[Response] 密钥已更新，自动重试原请求:', url)
+							return request(options, true) // 标记为重试请求
 						})
-					})
-					reject(new Error('密钥已过期'))
+						.then(resolve)
+						.catch(reject)
 					return
 				}
 
