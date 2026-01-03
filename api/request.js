@@ -66,14 +66,14 @@ async function request(options, isRetry = false) {
 	// 准备请求数据
 	let requestData = options.data || {}
 	const aesKey = keyManager.getAesKey()
- 
+	const method = (options.method || 'GET').toUpperCase()
 
-	// 加密请求数据
-	if (needEncrypt && aesKey && requestData && Object.keys(requestData).length > 0) {
+	// 加密请求数据（仅 POST/PUT/PATCH 等非 GET 请求才加密 body）
+	// GET 请求的参数会变成 URL 查询字符串，加密后后端无法解析
+	if (needEncrypt && aesKey && method !== 'GET' && requestData && Object.keys(requestData).length > 0) {
 		try {
 			const encrypted = CryptoUtil.aesEncrypt(JSON.stringify(requestData), aesKey)
 			requestData = { encrypted }
- 
 		} catch (error) {
 			console.error('[Request] 加密失败:', error)
 		}
