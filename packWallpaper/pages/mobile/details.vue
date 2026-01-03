@@ -12,7 +12,7 @@
 <script setup>
 	import { getCurrentInstance, computed, ref } from 'vue';
 	import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-	import { getImageDetail } from '@/api/image.js';
+	import { getImageDetail } from '@/packWallpaper/api/image.js';
 	import { checkCollected } from '@/api/user.js';
 
 	// data数据

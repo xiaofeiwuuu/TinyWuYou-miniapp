@@ -41,7 +41,7 @@
 <script setup>
 	import { getCurrentInstance, ref } from 'vue';
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
-	import { getTextList, copyText } from '@/api/text.js';
+	import { getTextList, copyText } from '@/packWallpaper/api/text.js';
 
 	// data数据
 	const { $fu, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;

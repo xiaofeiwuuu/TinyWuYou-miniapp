@@ -87,7 +87,7 @@
 <script setup>
 	import { getCurrentInstance, ref } from 'vue';
 	import { onLoad } from '@dcloudio/uni-app';
-	import { activateVipCardApi, getVipHistoryApi } from '@/api/vip.js';
+	import { activateVipCardApi, getVipHistoryApi } from '@/packUser/api/vip.js';
 	import { useUserStore } from '@/stores/user.js';
 
 	// data数据

@@ -17,7 +17,7 @@
 	import { getCurrentInstance, ref, computed } from 'vue';
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	import { useCategoryStore } from '@/stores/category.js';
-	import { getImageList } from '@/api/image.js';
+	import { getImageList } from '@/packWallpaper/api/image.js';
 
 	// data数据
 	const { $fu, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;

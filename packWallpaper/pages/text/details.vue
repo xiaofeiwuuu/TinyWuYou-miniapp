@@ -73,7 +73,7 @@
 <script setup>
 	import { getCurrentInstance, ref } from 'vue';
 	import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-	import { getTextDetail, copyText, getRecommendTexts } from '@/api/text.js';
+	import { getTextDetail, copyText, getRecommendTexts } from '@/packWallpaper/api/text.js';
 
 	// data数据
 	const { $fu, $mUtil, $parseURL, $openPage } = getCurrentInstance().appContext.config.globalProperties;

@@ -26,7 +26,7 @@
 <script setup>
 	import { getCurrentInstance, ref } from 'vue';
 	import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-	import { getImageDetail, getRecommendImages } from '@/api/image.js';
+	import { getImageDetail, getRecommendImages } from '@/packWallpaper/api/image.js';
 	import { checkCollected } from '@/api/user.js';
 
 	// data数据

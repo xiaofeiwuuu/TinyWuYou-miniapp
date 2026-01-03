@@ -79,7 +79,7 @@
 <script setup>
 import { getCurrentInstance, ref, computed, watch } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { getImageList } from '@/api/image.js';
+import { getImageList } from '@/packWallpaper/api/image.js';
 
 // data数据
 const { $fu, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
