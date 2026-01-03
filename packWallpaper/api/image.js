@@ -1,4 +1,4 @@
-import request from './request.js'
+import request from '@/api/request.js'
 
 /**
  * 获取图片列表
