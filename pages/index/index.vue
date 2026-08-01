@@ -40,12 +40,12 @@ const handleChangeTabbar = (e) => {
   pagePath.value = e.pagePath;
 };
 
-const getUserId = () => {
+const getInviteCode = () => {
   try {
     const userInfo = uni.getStorageSync("userInfo");
     if (userInfo) {
       const parsed = JSON.parse(userInfo);
-      return parsed.id || parsed.userId || "";
+      return parsed.inviteCode || "";
     }
   } catch (error) {
     console.error("[Find] 获取用户ID失败:", error);
@@ -54,13 +54,13 @@ const getUserId = () => {
 };
 
 onShareAppMessage(() => {
-  const userId = getUserId();
-  console.log(888, userId);
+  const inviteCode = getInviteCode();
+  
 
   return {
     title: "TinyWuYou-壁纸 精美壁纸头像等你来拿！",
-    path: `/pages/index/index?inviterId=${userId}`,
-    query: `inviterId=${userId}`,
+    path: `/pages/index/index?inviteCode=${inviteCode}`,
+    query: `inviteCode=${inviteCode}`,
     // imageUrl: $mAssetsPath.banner || "",
   };
 });
@@ -84,7 +84,7 @@ $height: 100rpx;
   }
 }
 
-:deep(.fu-search__box) {
+:deep(.u-search__content) {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 </style>

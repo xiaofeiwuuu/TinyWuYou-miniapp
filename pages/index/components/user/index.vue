@@ -1,27 +1,27 @@
 <template>
 	<view class="fu-p-b-80">
-		<fu-nav-bar bgColor="transparent" :border="false" fixed />
+		<app-nav-bar bgColor="transparent" :border="false" fixed />
 		
 		<view class="fu-m-x-30">
 			<!-- 基础信息 -->
 			<view class=" fu-flex fu-flex-column-center">
 				<view class="fu-flex-1 fu-flex fu-flex-column-center">
-					<fu-avatar size="100rpx" :src="userInfo.avatarUrl" />
+					<up-avatar size="100rpx" :src="userInfo.avatarUrl" />
 					<view class="fu-m-l-20">
 						<view class="fu-flex fu-flex-column-center">
-							<fu-text :text="userInfo.nickname" color="#ffffff" size="32" bold />
+							<up-text :text="userInfo.nickname" color="#ffffff" size="32" bold />
 							<!-- VIP标识 -->
 							<view v-if="userInfo.isVip === 1" class="vip-badge fu-m-l-10">
-								<fu-text text="VIP" color="#FFD700" size="20" bold />
+								<up-text text="VIP" color="#FFD700" size="20" bold />
 							</view>
 						</view>
 						<view class="fu-flex fu-flex-column-center fu-m-t-10">
-							<fu-text :text="`Uid：${userInfo.id}`" color="#999999" size="24" margin="0 10rpx 0 0" bold />
-							<fu-icons type="copy" color="#55aaff" @click="$mUtil.setClipboard(userInfo.id)" />
+							<up-text :text="`Uid：${userInfo.uid || ''}`" color="#999999" size="24" margin="0 10rpx 0 0" bold />
+							<up-icon name="file-text" color="#55aaff" @click="$mUtil.setClipboard(userInfo.uid)" />
 						</view>
 					</view>
 				</view>
-				<fu-icons type="gear-2" size="50rpx" color="#999999" />
+				<up-icon name="setting" size="50rpx" color="#999999" />
 			</view>
 
 			<!-- 下载次数和VIP信息卡片 -->
@@ -29,10 +29,10 @@
 				<view class="fu-flex fu-flex-row-between fu-flex-column-center">
 					<!-- 剩余下载次数 -->
 					<view class="info-item fu-flex-1">
-						<fu-text text="剩余下载" color="#999999" size="24" />
+						<up-text text="剩余下载" color="#999999" size="24" />
 						<view class="fu-m-t-10 fu-flex fu-flex-column-center">
-							<fu-text :text="`${userInfo.downloadCount}`" color="#ffffff" size="40" bold />
-							<fu-text text=" 次" color="#999999" size="24" />
+							<up-text :text="`${userInfo.downloadCount}`" color="#ffffff" size="40" bold />
+							<up-text text=" 次" color="#999999" size="24" />
 						</view>
 					</view>
 
@@ -41,16 +41,16 @@
 
 					<!-- VIP状态 -->
 					<view class="info-item fu-flex-1">
-						<fu-text text="会员状态" color="#999999" size="24" />
+						<up-text text="会员状态" color="#999999" size="24" />
 						<view class="fu-m-t-10 fu-flex fu-flex-direction-column fu-flex-column-center">
-							<fu-text
+							<up-text
 								:text="userInfo.isVip === 1 ? 'VIP会员' : '普通用户'"
 								:color="userInfo.isVip === 1 ? '#FFD700' : '#ffffff'"
 								size="28"
 								bold
 							/>
 							<view v-if="userInfo.isVip === 1 && userInfo.vipExpireTime" class="fu-m-t-5">
-								<fu-text :text="`剩余${getRemainingDays(userInfo.vipExpireTime)}天`" color="#999999" size="20" />
+								<up-text :text="`剩余${getRemainingDays(userInfo.vipExpireTime)}天`" color="#999999" size="20" />
 							</view>
 						</view>
 					</view>
@@ -59,37 +59,35 @@
 			
 			<!-- 其他 -->
 			<view class="fu-border fu-h-160 fu-bg-main fu-b-r-10 fu-m-t-60">
-				<fu-grid :column="4" :showBorder="false" :highlight="false" @change="(val) => $openPage($mConstDataConfig.userEntrys[val.detail.index].url)">
-					<fu-grid-item v-for="(item, index) in $mConstDataConfig.userEntrys" :index="index" :key="index">
+				<up-grid :col="4" :border="false" @click="(name) => $openPage($mConstDataConfig.userEntrys[name].url)">
+					<up-grid-item v-for="(item, index) in $mConstDataConfig.userEntrys" :name="index" :key="index">
 						<view class="fu-flex fu-flex-direction-column fu-flex-column-center fu-flex-row-center fu-flex-1">
 							<view class="fu-w-60 fu-h-60">
-								<fu-image width="100%" height="60" radius="10" bgColor="transparent" :src="item.icon"></fu-image>
+								<app-image width="100%" height="60" radius="10" bgColor="transparent" :src="item.icon"></app-image>
 							</view>
 							<text class="fu-font-24 fu-m-t-15">{{ item.name }}</text>
 						</view>
-					</fu-grid-item>
-				</fu-grid>
+					</up-grid-item>
+				</up-grid>
 			</view>
 			
 			<view class="fu-border fu-bg-main fu-b-r-10 fu-m-t-20 fu-p-y-10">
 				<view v-for="(item, index) in $mConstDataConfig.userRestEntrys" :key="index" class="menu-item">
-					<fu-button
-						width="100%"
-						height="88"
+					<up-button
 						:openType="item.openType"
-						customStyle="background: transparent; border: none;"
+						:customStyle="{width: '100%', height: '88rpx', background: 'transparent', border: 'none'}"
 						@click="onClick('userRestEntrys', item)"
 					>
 						<view class="fu-flex-1 fu-flex fu-flex-column-center fu-font-26 menu-item__content">
 							<view class="fu-flex-1 fu-flex fu-flex-column-center">
 								<view class="fu-w-35 fu-h-35 fu-m-r-20">
-									<fu-image width="100%" height="35" bgColor="transparent" :src="item.icon"></fu-image>
+									<app-image width="100%" height="35" bgColor="transparent" :src="item.icon"></app-image>
 								</view>
 								<text class="menu-item__text">{{ item.name }}</text>
 							</view>
-							<fu-icons type="right" color="#999999" size="15" v-if="item.isIcon"></fu-icons>
+							<up-icon name="arrow-right" color="#999999" size="15" v-if="item.isIcon"></up-icon>
 						</view>
-					</fu-button>
+					</up-button>
 				</view>
 			</view>
 

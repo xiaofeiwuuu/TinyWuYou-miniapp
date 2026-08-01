@@ -91,14 +91,14 @@
 					}
 
 					// 获取邀请者ID (从启动参数)
-					let inviterId = ''
+					let inviteCode = ''
 
 					// 方式1: 从启动 options 的 query 获取
-					if (options && options.query && options.query.inviterId) {
-						inviterId = options.query.inviterId
+					if (options && options.query && options.query.inviteCode) {
+						inviteCode = options.query.inviteCode
 					}
 
-					const res = await wxLogin(loginRes.code, '', '', platform, inviterId || '')
+					const res = await wxLogin(loginRes.code, '', '', platform, inviteCode || '')
 
 					if (res && res.code === 0 && res.data && res.data.accessToken) {
 						// 保存 token
@@ -127,7 +127,8 @@
 
 <style lang="scss">
 	/*每个页面公共css */
-	@import "fusions-ui/index.scss";
+	@import "uview-plus/index.scss";
+	@import "static/css/base/index.scss";
 	@import "static/css/fontFamily.scss";
 	@import "static/css/main.scss";
 
@@ -155,12 +156,12 @@
 		font-family: fontAgile;
 	}
 
-	:deep(.fu-nav-bar-text) {
+	:deep(.app-nav-bar-text) {
 		font-weight: bold;
 	}
 
 	.navbar__content {
-		:deep(.fu-navbar__content) {
+		:deep(.app-navbar__content) {
 		  @media (prefers-reduced-motion: no-preference) {
 		    backdrop-filter: blur(10px) !important;
 		  }
