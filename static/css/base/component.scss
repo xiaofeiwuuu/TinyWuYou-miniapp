@@ -1,0 +1,8 @@
+// 通过scss的mixin功能,把需要写的4行css,变成一行
+// 定义混入指令,用于在非nvue环境下的flex定义,因为nvue没有display属性,会报错
+@mixin flex($direction: row) {
+	/* #ifndef APP-NVUE */
+	display: flex;
+	/* #endif */
+	flex-direction: $direction;
+}

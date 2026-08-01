@@ -1,11 +1,11 @@
 <template>
 	<page-layout customClass="navbar__content">
-		<fu-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="left" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<view class="sticker-box">
 			<view class="sticker-box__now">
 				<view class="sticker-box__now--image">
-					<fu-image width="100%" height="100%" radius="15" bgColor="#222222" :src="data.image"></fu-image>
+					<app-image width="100%" height="100%" radius="15" bgColor="#222222" :src="data.image"></app-image>
 					<view v-if="data.isVip" class="vip-badge">VIP</view>
 				</view>
 			</view>

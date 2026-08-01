@@ -1,15 +1,15 @@
 <template>
 	<view class="button-nav-box fu-bottom" :class="{'fu-fixed': props.fixed}" :style="{backgroundColor: fixed? props.backgroundColor: ''}">
-		<view class="button-nav-box__item" :style="{margin: `0 ${$fu.addUnit(props.margin)}`}">
+		<view class="button-nav-box__item" :style="{margin: `0 ${addUnit(props.margin)}`}">
 			<slot>
-				<fu-button width="100%" height="100%" :bgColor="props.bgColor" :radius="props.radius" :color="props.color" :fontSize="props.fontSize" @click="$emit('click')">{{ props.title || '' }}</fu-button>
+				<up-button :color="props.bgColor" :customStyle="{width: '100%', height: '100%', borderRadius: addUnit(props.radius)}" @click="$emit('click')"><text :style="{color: props.color, fontSize: addUnit(props.fontSize)}">{{ props.title || '' }}</text></up-button>
 			</slot>
 		</view>
 	</view>
 </template>
 
 <script setup>
-	import { getCurrentInstance } from 'vue';
+	import { addUnit } from 'uview-plus/libs/function/index.js';
 	/**
 	 * @description 按钮
 	 * @property {Boolean} fixed 固定 （默认 false）
@@ -68,9 +68,7 @@
 			default: 0
 		}
 	});
-	
-	// data数据
-	const { $fu } = getCurrentInstance().appContext.config.globalProperties;
+
 </script>
 
 <style lang="scss" scoped>

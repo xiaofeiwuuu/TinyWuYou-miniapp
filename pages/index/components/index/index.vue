@@ -1,12 +1,12 @@
 <template>
 	<view class="fu-p-b-30">
 		<!-- <view class="fu-m-x-30 fu-m-t-20">
-			<fu-swiper :list="[{image: $mAssetsPath.banner}]" height="320" radius="15" :showIndicator="false" />
+			<up-swiper :list="[{image: $mAssetsPath.banner}]" keyName="image" height="320" radius="15" :indicator="false" />
 		</view> -->
 		
 		<jc-wallpaper-rec />
 			
-		<!-- <fu-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="onClick('tabs', $event)" /> -->
+		<!-- <up-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="onClick('tabs', $event)" /> -->
 		
 		<!-- <view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
 			<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />

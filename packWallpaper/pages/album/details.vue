@@ -3,7 +3,7 @@
 		<view class="album-box fu-bottom">
 			<view class="album-box__top">
 				<view class="album-box__top--back">
-					<fu-image width="100%" height="100%" bgColor="transparent"></fu-image>
+					<app-image width="100%" height="100%" bgColor="transparent"></app-image>
 				</view>
 				
 				<view class="album-box__top--content">
@@ -13,12 +13,12 @@
 								<view class="font-family fu-font-36">小米10S Pro内置壁纸</view>
 								<view class="fu-m-t-10 fu-color-b1b1b1">Civi 5 Pro</view>
 							</view>
-							<fu-button bgColor="rgba(255, 255, 255, 0.1)" color="#ffffff" shape="round" @click="onClick('praise')">
+							<up-button color="rgba(255, 255, 255, 0.1)" shape="round" :customStyle="{color: '#ffffff', width: 'auto'}" @click="onClick('praise')">
 								<view class="fu-flex fu-flex-column-center">
-									<fu-icons :type="isPraise? 'hand-up-fill': 'hand-up'" size="30rpx" :color="isPraise? '#ff5500': '#ffffff'" />
+									<up-icon :name="isPraise? 'thumb-up-fill': 'thumb-up'" size="30rpx" :color="isPraise? '#ff5500': '#ffffff'" />
 									<text class="fu-m-l-10">100</text>
 								</view>
-							</fu-button>
+							</up-button>
 						</view>
 					</view>
 				</view>
@@ -39,7 +39,7 @@
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	
 	// data数据
-	const { $fu, $mAssetsPath, $mConstDataConfig, $openPage } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mAssetsPath, $mConstDataConfig, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 	let isPraise = ref(false);
 	let list = ref([]);
 	let queryParams = ref({
@@ -57,9 +57,9 @@
 	const onClick = (state) => {
 		switch(state) {
 			case 'praise':
-				if(isPraise.value) return $fu.toast('你已经点过赞啦~')
+				if(isPraise.value) return $u.toast('你已经点过赞啦~')
 				isPraise.value = !isPraise.value;
-				$fu.toast('感谢你的赞赏~')
+				$u.toast('感谢你的赞赏~')
 				break
 			case 'mobileDetails':
 				$openPage({name: state})

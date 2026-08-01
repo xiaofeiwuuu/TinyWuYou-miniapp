@@ -2,7 +2,7 @@
 	<view class="grid-container">
 		<view :id="elId" class="grid-box" :style="[gridStyle]">
 			<view class="grid-box__item" :style="[itemStyle]" v-for="(item, index) in props.list" :key="index" @click="onClick(item)">
-				<fu-image width="100%" :height="height" bgColor="#222222" :radius="radius" :src="item.image"></fu-image>
+				<app-image width="100%" :height="height" bgColor="#222222" :radius="radius" :src="item.image"></app-image>
 				<view v-if="item.isVip" class="vip-badge">VIP</view>
 				<slot :data="item" />
 			</view>
@@ -59,7 +59,7 @@
 
 	// data数据
 	const instance = getCurrentInstance();
-	const { $fu } = instance.appContext.config.globalProperties;
+	const { $u } = instance.appContext.config.globalProperties;
 	const elId = ref(`fu_${Math.ceil(Math.random() * 10e5).toString(36)}`);
 	let gridStyle = ref({});
 	let width = ref(0);

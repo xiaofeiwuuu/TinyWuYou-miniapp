@@ -1,6 +1,6 @@
 <template>
 	<page-layout>
-		<fu-nav-bar bgColor="#111111" leftIcon="left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="#111111" leftIcon="arrow-left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<view class="text-list-container">
 			<!-- 文案列表 -->
@@ -44,7 +44,7 @@
 	import { getTextList, copyText } from '@/packWallpaper/api/text.js';
 
 	// data数据
-	const { $fu, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
 
 	let title = ref('文案');
 	let categoryId = ref(null);
@@ -177,7 +177,7 @@
 			uni.setClipboardData({
 				data: item.content,
 				success: async () => {
-					$fu.toast('复制成功');
+					$u.toast('复制成功');
 
 					// 调用后端记录复制
 					try {
@@ -188,12 +188,12 @@
 				},
 				fail: (err) => {
 					console.error('[TextList] 复制失败:', err);
-					$fu.toast('复制失败');
+					$u.toast('复制失败');
 				}
 			});
 		} catch (error) {
 			console.error('[TextList] 复制异常:', error);
-			$fu.toast('复制失败');
+			$u.toast('复制失败');
 		}
 	};
 

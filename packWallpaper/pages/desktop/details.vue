@@ -1,10 +1,10 @@
 <template>
 	<page-layout>
 		<view class="album-box" :style="{height: `${sysInfo.windowHeight}px`}">
-			<fu-nav-bar bgColor="transparent" leftIcon="left" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+			<app-nav-bar bgColor="transparent" leftIcon="arrow-left" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 			<view class="album-box__image">
-				<fu-image width="100%" height="100%" bgColor="#222222" radius="15" :src="data.image"></fu-image>
+				<app-image width="100%" height="100%" bgColor="#222222" radius="15" :src="data.image"></app-image>
 				<view v-if="data.isVip" class="vip-badge">VIP</view>
 			</view>
 
@@ -20,7 +20,7 @@
 	import { checkCollected } from '@/api/user.js';
 
 	// data数据
-	const { $fu, $mUtil, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
 	let data = ref({
 		image: '',
 		title: '',
@@ -30,7 +30,7 @@
 	let isCollected = ref(false);
 
 	const sysInfo = computed(() => {
-		return $fu.sys()
+		return $u.sys()
 	});
 
 	// 生命周期

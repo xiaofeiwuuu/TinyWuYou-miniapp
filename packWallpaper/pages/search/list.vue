@@ -1,15 +1,15 @@
 <template>
 	<view class="">
-		<fu-nav-bar bgColor="#111111" leftWidth="0" :rightWidth="navInfo.right" :paddingTitle="5" :border="false" fixed>
+		<app-nav-bar bgColor="#111111" leftWidth="0" :rightWidth="navInfo.right" :paddingTitle="5" :border="false" fixed>
 			<view class="fu-flex-1 fu-flex fu-flex-column-center fu-gap-20 fu-m-l--10">
-				<fu-icons type="left" color="#ffffff" size="24" @click="$mUtil.overBack()"></fu-icons>
-				<fu-search v-model="queryParams.keyword" height="36px" radius="30px" inputAlign="left" bgColor="#222222" color="#ffffff" :showAction="false" @clear="handleSearchClear" @confirm="handleSearch"></fu-search>
+				<up-icon name="arrow-left" color="#ffffff" size="24" @click="$mUtil.overBack()"></up-icon>
+				<up-search v-model="queryParams.keyword" height="36px" shape="round" inputAlign="left" bgColor="#222222" color="#ffffff" :showAction="false" @clear="handleSearchClear" @search="handleSearch"></up-search>
 			</view>
-		</fu-nav-bar>
+		</app-nav-bar>
 			
-		<fu-sticky :customNavHeight="customNavHeight" bgColor="#111111">
-			<fu-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="onClick('tabs', $event)" />
-		</fu-sticky>
+		<up-sticky :customNavHeight="customNavHeight" bgColor="#111111">
+			<up-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="onClick('tabs', $event)" />
+		</up-sticky>
 		
 		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
 			<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />
@@ -23,7 +23,7 @@
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	
 	// data数据
-	const { $fu, $mUtil, $parseURL, $mAssetsPath, $mConstDataConfig } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $parseURL, $mAssetsPath, $mConstDataConfig } = getCurrentInstance().appContext.config.globalProperties;
 	let navInfo = ref({});
 	const tabsList = ref([
 		{ id: 0, name: '推荐' },
@@ -69,14 +69,14 @@
 	
 	// computed计算属性
 	const customNavHeight = computed(() => {
-		return $mUtil.pxToRpx($fu.sys().statusBarHeight + 44);
+		return $mUtil.pxToRpx($u.sys().statusBarHeight + 44);
 	});
 	
 	// methods方法
 	// 处理搜索
-	const handleSearch = (e) => {
+	const handleSearch = (value) => {
 		init()
-		if($fu.trim(e.value)) return $mUtil.searchStorage({key: 'wallpaperHistoryStorage', data: e})
+		if($u.trim(value)) return $mUtil.searchStorage({key: 'wallpaperHistoryStorage', data: {value}})
 	};
 	
 	// 清空搜索

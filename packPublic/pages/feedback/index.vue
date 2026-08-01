@@ -1,27 +1,27 @@
 <template>
 	<view class="fu-m-x-30">
-		<fu-button width="100%" height="88" bgColor="#ffffff" padding="0 10px" radius="15" margin="30rpx 0 0" @click.native="$openPage('question')">
+		<up-button :customStyle="{width: '100%', height: '88rpx', backgroundColor: '#ffffff', padding: '0 10px', borderRadius: '15rpx', margin: '30rpx 0 0', border: 'none'}" @click="$openPage('question')">
 			<view class="fu-flex-1 fu-flex fu-flex-column-center fu-font-26" >
 				<view class="fu-flex-1 fu-flex fu-flex-column-center">
-					<fu-icons type="help" color="#999999" size="20"></fu-icons>
+					<up-icon name="question-circle" color="#999999" size="20"></up-icon>
 					<text class="fu-m-l-10">常见问题</text>
 				</view>
-				<fu-icons type="right" color="#999999" size="15"></fu-icons>
+				<up-icon name="arrow-right" color="#999999" size="15"></up-icon>
 			</view>
-		</fu-button>
+		</up-button>
 		
 		<view class="fu-m-t--40">
-			<fu-form labelPosition="top" labelWidth="300">
+			<up-form :model="form.data" labelPosition="top" labelWidth="300">
 				<block v-for="(item, index) in form.columns" :key="index">
-					<fu-form-item :label="item.name">
-						<fu-textarea :placeholder="item.tips" height="260" radius="15" maxlength="500" borderColor="#f3f3f3" count v-if="item.key == 'content'"></fu-textarea>
+					<up-form-item :label="item.name">
+						<up-textarea v-model="form.data.content" :placeholder="item.tips" height="260" maxlength="500" count :customStyle="{borderRadius: '15rpx', border: '1rpx solid #f3f3f3'}" border="none" v-if="item.key == 'content'"></up-textarea>
 						<view class="fu-bg-ffffff fu-b-r-15 fu-p-20" v-if="item.key == 'image'">
-							<fu-upload ref="upload" :limit="6" @select="handleUpload" :imageStyles="{border: {borderRadius: '15rpx'}}" @delete="handleUploadDel"></fu-upload>
+							<up-upload :fileList="fileList" :maxCount="6" @afterRead="handleUpload" @delete="handleUploadDel" width="160rpx" height="160rpx"></up-upload>
 						</view>
-						<fu-input height="50" :customStyle="{backgroundColor: '#ffffff'}" radius="15" type="text" :placeholder="item.tips" v-if="item.key === 'contact'"></fu-input>
-					</fu-form-item>
+						<up-input v-model="form.data.contact" type="text" :placeholder="item.tips" border="none" :customStyle="{backgroundColor: '#ffffff', height: '50rpx', borderRadius: '15rpx', padding: '10rpx 20rpx'}" v-if="item.key === 'contact'"></up-input>
+					</up-form-item>
 				</block>
-			</fu-form>
+			</up-form>
 		</view>
 		
 		<jc-button-nav color="#ffffff" radius="15" margin="30" fixed @click="handleSubmit"></jc-button-nav>
@@ -33,6 +33,8 @@
 
 	// data数据
 	const { $openPage } = getCurrentInstance().appContext.config.globalProperties;
+	// 上传组件的文件列表（uview-plus up-upload 需要受控的 fileList）
+	const fileList = ref([]);
 	let form = ref({
 		data: {},
 		columns: [
@@ -43,18 +45,19 @@
 	});
 	
 	// methods方法
-	// 处理上传图片
+	// 处理上传图片（up-upload 的 afterRead：e.file 可能是单个对象或数组）
 	const handleUpload = (e) => {
-		const newImagePath = e.tempFiles[0].path;
-		form.value.data.image = form.value.data.image ? [...form.value.data.image, newImagePath]: [newImagePath];
+		const files = Array.isArray(e.file) ? e.file : [e.file];
+		files.forEach(file => {
+			fileList.value.push({ url: file.url });
+		});
+		form.value.data.image = fileList.value.map(item => item.url);
 	};
-	
-	// 处理删除的图片
+
+	// 处理删除的图片（up-upload 的 delete：e.index 为被删项下标）
 	const handleUploadDel = (e) => {
-		const targetPath = e.tempFile.path;
-		if (!form.value.data.image || !targetPath) return;
-		form.value.data.image = form.value.data.image.filter(item => item !== targetPath);
-		console.log(form.value.data.image)
+		fileList.value.splice(e.index, 1);
+		form.value.data.image = fileList.value.map(item => item.url);
 	};
 	
 	// 提交反馈
@@ -69,32 +72,17 @@
 		color: $text-color-333333;
 	}
 	
-	:deep(.fu-forms-item) {
+	:deep(.u-form-item) {
 		margin-bottom: 20rpx;
 	}
-	
-	:deep(.fu-forms-item__label) {
+
+	:deep(.u-form-item__body__left__content__label) {
 		font-weight: bold;
 	}
-	
-	:deep(.fu-border) {
-		border-color: #f3f3f3 !important;
-	}
-	
-	:deep(.fu-upload-image__box-content) {
+
+	:deep(.u-upload__wrap__preview),
+	:deep(.u-upload__wrap__preview__image),
+	:deep(.u-upload__button) {
 		border-radius: 15rpx !important;
-	}
-	
-	:deep(.icon-add) {
-		width: 30px !important;
-	}
-	
-	:deep(.icon-del-box) {
-		width: 40rpx;
-		height: 40rpx;
-	}
-	
-	:deep(.icon-del) {
-		width: 13px;
 	}
 </style>

@@ -1,10 +1,10 @@
 <template>
 	<page-layout customClass="navbar__content">
-		<fu-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 		<view class="fu-m-x-30">
 			<view class="album-box__item" v-for="(item,index) in 6" :key="index" @click="$openPage('albumDetails')">
 				<view class="album-box__back">
-					<fu-image width="100%" height="100%" bgColor="transparent"></fu-image>
+					<app-image width="100%" height="100%" bgColor="transparent"></app-image>
 				</view>
 				<view class="album-box__content fu-flex fu-flex-direction-column">
 					<view class="fu-flex-1">

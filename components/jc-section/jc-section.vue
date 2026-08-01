@@ -2,22 +2,20 @@
 	<view class="fu-flex fu-flex-column-center" :style="{margin: props.margin}">
 		<view class="fu-flex-1">
 			<view :class="{'custom-family': family}">
-				<fu-text :text="props.title" color="#FFFFFF" :size="props.size"></fu-text>
+				<up-text :text="props.title" color="#FFFFFF" :size="props.size"></up-text>
 			</view>
-			<fu-text :text="props.desc" color="#555555" :size="props.descSize"></fu-text>
+			<up-text :text="props.desc" color="#555555" :size="props.descSize"></up-text>
 		</view>
 		<slot>
-			<fu-button bgColor="#333333" height="40" padding="0 20rpx" color="#999999" shape="round"  fontSize="28" @click="$emit('click')" v-if="showRight">
-				<span class="fu-m-r-5">更多</span>
-				<span class="fu-m-t-4">+</span>
-			</fu-button>
+			<up-button color="#333333" shape="round" :customStyle="{height: '40rpx', padding: '0 20rpx', width: 'auto'}" @click="$emit('click')" v-if="showRight">
+				<text class="fu-m-r-5" style="color: #999999; font-size: 28rpx;">更多</text>
+				<text class="fu-m-t-4" style="color: #999999; font-size: 28rpx;">+</text>
+			</up-button>
 		</slot>
 	</view>
 </template>
 
 <script setup>
-	import { getCurrentInstance } from 'vue';
-	
 	// $emit方法
 	const $emit = defineEmits(['click']);
 	
@@ -52,9 +50,7 @@
 			default: true
 		}
 	});
-	
-	// data数据
-	const { $fu } = getCurrentInstance().appContext.config.globalProperties;
+
 </script>
 
 <style lang="scss" scoped>

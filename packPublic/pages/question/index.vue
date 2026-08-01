@@ -1,6 +1,6 @@
 <template>
 	<page-layout customClass="navbar__content">
-		<fu-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="left" title="常见问题" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" title="常见问题" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<view class="fu-m-x-30 fu-m-t-20 fu-p-b-50 fu-font-32">
 			<view class="fu-m-b-20" v-for="(item,index) in list" :key="index">

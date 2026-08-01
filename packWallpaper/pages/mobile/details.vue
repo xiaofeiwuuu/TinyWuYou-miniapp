@@ -1,6 +1,6 @@
 <template>
 	<view class="fu-relative">
-		<fu-image width="100%" height="100vh" bgColor="transparent" :duration="300" :src="data.image"></fu-image>
+		<app-image width="100%" height="100vh" bgColor="transparent" :duration="300" :src="data.image"></app-image>
 		<view v-if="data.isVip" class="vip-badge">VIP</view>
 
 		<jc-date />

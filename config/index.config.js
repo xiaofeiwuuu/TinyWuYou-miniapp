@@ -2,7 +2,7 @@ const CONFIG = {
 	// 开发环境配置
 	development: {
 		assetsPath: '/static/', // 静态资源路径
-		baseUrl: 'https://server.xiaofeiwuuu.top/api', // 后台接口请求地址
+		baseUrl: 'http://localhost:3000/api', // 后台接口请求地址
 		hostUrl: '', // H5地址(前端运行地址)
 		websocketUrl: '', // websocket服务端地址
 		weixinAppId: '' // 微信公众号appid

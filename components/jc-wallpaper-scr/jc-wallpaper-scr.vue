@@ -8,14 +8,14 @@
 					:key="item.id || index"
 					@click="$emit('click', item)"
 				>
-					<view class="fu-relative" :style="{marginRight: index + 1 < displayList.length? `${props.gutter}px`: `${$fu.addUnit(props.margin)}`}">
-						<fu-image
+					<view class="fu-relative" :style="{marginRight: index + 1 < displayList.length? `${props.gutter}px`: `${$u.addUnit(props.margin)}`}">
+						<app-image
 							:width="width"
 							:height="height"
 							bgColor="#222222"
 							:radius="radius"
 							:src="item.thumbnailUrl || item.imageUrl || `https://picsum.photos/200/200?${index}`"
-						></fu-image>
+						></app-image>
 						<slot :data="item" />
 					</view>
 				</view>
@@ -85,7 +85,7 @@
 	
 	// data数据
 	const instance = getCurrentInstance();
-	const { $fu } = instance.appContext.config.globalProperties;
+	const { $u } = instance.appContext.config.globalProperties;
 	const elId = ref(`fu_${Math.ceil(Math.random() * 10e5).toString(36)}`);
 	let width = ref(0);
 	let height = ref(0);
@@ -116,7 +116,7 @@
 	// computed计算属性
 	const wallpaperStyle = computed(() => {
 		return {
-			margin: `${$fu.getPx(props.gutter)}px ${$fu.addUnit(props.margin)} 0`,
+			margin: `${$u.getPx(props.gutter)}px ${$u.addUnit(props.margin)} 0`,
 		}
 	});
 	

@@ -1,6 +1,6 @@
 <template>
 	<page-layout customClass="navbar__content">
-		<fu-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="left" title="我的下载" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" title="我的下载" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 	
 		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
 			<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />

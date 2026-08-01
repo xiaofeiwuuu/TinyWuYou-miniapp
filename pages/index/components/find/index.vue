@@ -9,7 +9,7 @@
 
 				<view class="find-box__item" v-for="(item,index) in list" :key="item.id || index" @click="navigateToMiniProgram(item)">
 					<view class="find-box__item--back">
-						<fu-image width="100%" height="100%" :src="item.coverUrl || $mAssetsPath.find1" />
+						<app-image width="100%" height="100%" :src="item.coverUrl || $mAssetsPath.find1" />
 					</view>
 
 					<view class="fu-flex-1 fu-relative fu-flex fu-flex-direction-column fu-m-x-30 fu-m-y-40">
@@ -17,7 +17,7 @@
 							<view class="fu-font-36 fu-line-1 font-family">{{ item.name || '' }}</view>
 							<view class="fu-font-24 fu-m-t-10 fu-line-2">{{ item.description || '' }}</view>
 						</view>
-						<fu-button text="立即查看" width="160" customStyle="background: rgba(255, 255, 255, 0.15); color: #ffffff; border: none;" fontSize="26" padding="10rpx 20rpx" shape="round" customTextStyle="font-weight: 500; color: #ffffff;" @click.stop="navigateToMiniProgram(item)" />
+						<up-button shape="round" :customStyle="{width: '160rpx', background: 'rgba(255, 255, 255, 0.15)', border: 'none', padding: '10rpx 20rpx', height: 'auto'}" @click.stop="navigateToMiniProgram(item)"><text style="font-size: 26rpx; font-weight: 500; color: #ffffff;">立即查看</text></up-button>
 					</view>
 				</view>
 			</view>
@@ -301,23 +301,21 @@
 		}
 	};
 
-	// 判断任务是否被禁用 (新人福利)
+	// 判断任务是否被禁用
+	// 任务类型固定四种：newbie / signin / invite / ad
 	const isTaskDisabled = (taskType) => {
-		// 签到任务根据 isSigned 状态判断 (兼容两种命名)
-		if (taskType === 'sign_in' || taskType === 'signin') {
+		if (taskType === 'signin') {
 			return isSigned.value;
 		}
-		// 新人福利始终禁用
+		// 新人福利注册时自动发放，不需要点
 		return taskType === 'newbie';
 	};
 
 	// 获取任务描述
 	const getTaskDesc = (task) => {
 		const descMap = {
-			'watch_ad': '观看广告视频',
 			'ad': '观看广告视频',
 			'invite': '邀请好友注册',
-			'sign_in': '每日签到打卡',
 			'signin': '每日签到打卡',
 			'newbie': '新人专属福利'
 		};
@@ -327,10 +325,8 @@
 	// 获取任务按钮文字
 	const getTaskButtonText = (taskType) => {
 		const textMap = {
-			'watch_ad': '去观看',
 			'ad': '去观看',
 			'invite': '去邀请',
-			'sign_in': '签到',
 			'signin': '签到',
 			'newbie': '领取'
 		};
@@ -341,7 +337,7 @@
 	const handleTaskClick = async (task) => {
 		// 禁用的任务不允许点击
 		if (isTaskDisabled(task.taskType)) {
-			const message = (task.taskType === 'sign_in' || task.taskType === 'signin') ? '今日已签到' : '该任务已自动完成';
+			const message = task.taskType === 'signin' ? '今日已签到' : '该任务已自动完成';
 			uni.showToast({
 				title: message,
 				icon: 'none'
@@ -357,12 +353,11 @@
 			return;
 		}
 
-		// 根据任务类型执行不同操作 (兼容两种命名)
-		if (task.taskType === 'watch_ad' || task.taskType === 'ad') {
-			// 观看广告
+		// 按任务类型分发。类型是固定的四种，后台不能新增，
+		// 所以这里不会出现"渲染了但点不动"的任务。
+		if (task.taskType === 'ad') {
 			await showRewardedVideoAd();
-		} else if (task.taskType === 'sign_in' || task.taskType === 'signin') {
-			// 签到
+		} else if (task.taskType === 'signin') {
 			await handleSignIn();
 		}
 	};

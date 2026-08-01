@@ -1,10 +1,10 @@
 <template>
 	<page-layout customClass="navbar__content">
-		<fu-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="left" title="我的收藏" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" title="我的收藏" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<!-- 图片类型切换 -->
 		<view class="fu-m-t-20">
-			<fu-tabs
+			<up-tabs
 				:list="imageTypeTabs"
 				activeStyle="#FFFFFF"
 				inactiveStyle="#a7a7a7"

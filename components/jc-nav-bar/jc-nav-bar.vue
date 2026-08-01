@@ -1,12 +1,12 @@
 <template>
-	<fu-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftWidth="0" :rightWidth="navInfo.right" :paddingTitle="5" :border="false" fixed>
+	<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftWidth="0" :rightWidth="navInfo.right" :paddingTitle="5" :border="false" fixed>
 		<view class="fu-flex-1 fu-flex fu-flex-column-center fu-gap-20">
 			<text class="navbar-title">TinyWuYou-壁纸</text>
 			<view class="fu-flex-1">
-				<!-- <fu-search height="36px" radius="30px" inputAlign="left" bgColor="transparent" :showAction="false" readonly @click="$openPage('wallpaperSearch')"></fu-search> -->
+				<!-- <up-search height="36px" radius="30px" inputAlign="left" bgColor="transparent" :showAction="false" readonly @click="$openPage('wallpaperSearch')"></up-search> -->
 			</view>
 		</view>
-	</fu-nav-bar>
+	</app-nav-bar>
 </template>
 
 <script setup>

@@ -15,7 +15,7 @@
 import { computed } from "vue";
 
 const props = defineProps({
-  // 任务类型: watch_ad, ad, invite, sign_in, signin, newbie
+  // 任务类型（系统固定四种）: newbie / signin / invite / ad
   type: {
     type: String,
     required: true,
@@ -35,12 +35,10 @@ const props = defineProps({
 // 获取图标路径
 const getIconPath = () => {
   const iconMap = {
-    watch_ad: "/static/img/ad.png",
-    ad: "/static/img/ad.png",
-    invite: "/static/img/invite.png",
-    sign_in: "/static/img/signin.png",
-    signin: "/static/img/signin.png",
     newbie: "/static/img/newbie.png",
+    signin: "/static/img/signin.png",
+    invite: "/static/img/invite.png",
+    ad: "/static/img/ad.png",
   };
   return iconMap[props.type] || "/static/img/ad.png";
 };

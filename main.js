@@ -1,7 +1,10 @@
 import App from './App'
 
-// 引入全局FusionsUI
-import FusionsUI from 'fusions-ui'
+// 引入全局uview-plus
+import uviewPlus from 'uview-plus'
+
+// 引入项目内路由封装
+import router from '@/util/router.js'
 
 // 引入全局方法
 import $mAssetsPath from '@/config/assets.config.js'
@@ -28,10 +31,11 @@ export function createApp() {
   const pinia = createPinia()
 
   app.use(pinia)
-  app.use(FusionsUI, {
-	  openRouter: true
-  })
-  uni.$fu.config.unit = 'rpx';
+  app.use(uviewPlus)
+  app.use(router)
+  uni.$u.setConfig({
+	  config: { unit: 'rpx' }
+  });
   app.config.globalProperties.$mAssetsPath = $mAssetsPath;
   app.config.globalProperties.$mConstDataConfig = $mConstDataConfig;
   app.config.globalProperties.$mUtil = $mUtil;

@@ -53,8 +53,9 @@
 	"easycom": {
 		"autoscan": true,
 		"custom": {
-			"^fu-image$": "@/components/fu-image/fu-image.vue",
-			"^fu-(.*)": "fusions-ui/components/fu-$1/fu-$1.vue"
+			"^app-(.*)": "@/components/app-$1/app-$1.vue",
+			"^up-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+			"^u--(.*)": "uview-plus/components/u-$1/u-$1.vue"
 		}
 	},
 	"globalStyle": {

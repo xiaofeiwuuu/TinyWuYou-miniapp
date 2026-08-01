@@ -1,9 +1,9 @@
 {
     "dependencies": {
         "crypto-js": "^4.2.0",
-        "fusions-ui": "^1.0.8",
-        "jsencrypt": "^3.5.4",
-        "pinia": "^3.0.3"
+        "node-forge": "^1.4.0",
+        "pinia": "^3.0.3",
+        "uview-plus": "^3.8.86"
     },
     "id": "TinyWuYou",
     "name": "TinyWuYou-壁纸",
@@ -13,7 +13,7 @@
     "keywords": [
         "uniapp",
         "vue3",
-        "fusions-ui"
+        "uview-plus"
     ],
     "dcloudext": {
         "type": "projecttemplate",

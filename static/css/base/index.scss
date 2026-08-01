@@ -1,0 +1,15 @@
+// 原 fusions-ui 公共基础样式收编（fu- 前缀原子类：flex/间距/字号/背景色等）
+// 项目模板中大量使用这些类名，收编后不再依赖任何 npm UI 库
+
+// 引入公共基础类
+@import "./main.scss";
+
+// 小程序特有的样式
+/* #ifdef MP */
+@import "./style.mp.scss";
+/* #endif */
+
+// H5特有的样式
+/* #ifdef H5 */
+@import "./style.h5.scss";
+/* #endif */

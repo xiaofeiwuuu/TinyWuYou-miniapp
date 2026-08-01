@@ -2,27 +2,27 @@
 	<view class="wallpaper-btn-box fu-bottom" :class="{'fu-fixed': props.fixed}">
 		<view class="wallpaper-btn-box__item" :style="{backgroundColor: props.bgColor}">
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('overBack')" @click="onClick('overBack')">
-				<fu-icons type="arrows-left" :color="iconColor" :size="iconSize"></fu-icons>
+				<up-icon name="arrow-leftward" :color="iconColor" :size="iconSize"></up-icon>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('like')" @click="onClick('like')">
-				<fu-icons :type="isLike? 'heart-fill': 'heart'" :color="isLike? '#FF725D': iconColor" :size="iconSize"></fu-icons>
+				<up-icon :name="isLike? 'heart-fill': 'heart'" :color="isLike? '#FF725D': iconColor" :size="iconSize"></up-icon>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('download')" @click="onClick('download')">
-				<fu-icons type="download-cloud" :color="iconColor" :size="iconSize + 6"></fu-icons>
+				<up-icon name="download" :color="iconColor" :size="iconSize + 6"></up-icon>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('index')" @click="onClick('index')">
-				<fu-icons type="home-fill" :color="iconColor" :size="iconSize"></fu-icons>
+				<up-icon name="home-fill" :color="iconColor" :size="iconSize"></up-icon>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('collect')" @click="onClick('collect')">
-				<fu-icons :type="isCollect? 'star-fill': 'star'" :color="isCollect? '#FF725D': iconColor" :size="iconSize"></fu-icons>
+				<up-icon :name="isCollect? 'star-fill': 'star'" :color="isCollect? '#FF725D': iconColor" :size="iconSize"></up-icon>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('share')" @click="onClick('share')">
-				<fu-icons type="share" :color="iconColor" :size="iconSize"></fu-icons>
+				<up-icon name="share-square" :color="iconColor" :size="iconSize"></up-icon>
 			</button>
 		</view>
 	</view>
@@ -83,7 +83,7 @@
 	});
 
 	// data数据
-	const { $fu, $mUtil, $openPage } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 	const userStore = useUserStore();
 	const adStore = useAdStore();
 	const iconSize = ref(24);
@@ -113,7 +113,7 @@
 				break
 			case 'like':
 				if(!isLike.value) return isLike.value = true;
-				$fu.toast('你的喜欢从不孤单！！！')
+				$u.toast('你的喜欢从不孤单！！！')
 				break
 			case 'download':
 				await onDownload()
@@ -135,7 +135,7 @@
 	// 收藏/取消收藏
 	const onCollect = async () => {
 		if (!props.data.id) {
-			$fu.toast('图片信息错误')
+			$u.toast('图片信息错误')
 			return
 		}
 
@@ -144,16 +144,16 @@
 				// 取消收藏
 				await uncollectImage(props.data.id)
 				isCollect.value = false
-				$fu.toast('已取消收藏')
+				$u.toast('已取消收藏')
 			} else {
 				// 收藏
 				await collectImage(props.data.id)
 				isCollect.value = true
-				$fu.toast('收藏成功')
+				$u.toast('收藏成功')
 			}
 		} catch (error) {
 			console.error('[Wallpaper Btn] 收藏操作失败:', error)
-			$fu.toast(error.message || '操作失败')
+			$u.toast(error.message || '操作失败')
 		}
 	};
 
@@ -161,13 +161,13 @@
 	const onDownload = async () => {
 		if (!props.data.id) {
 			console.error('[Wallpaper Btn] 缺少图片ID')
-			$fu.toast('图片信息错误')
+			$u.toast('图片信息错误')
 			return
 		}
 
 		if (!props.data.image) {
 			console.error('[Wallpaper Btn] 缺少图片URL')
-			$fu.toast('图片信息错误')
+			$u.toast('图片信息错误')
 			return
 		}
 
@@ -190,7 +190,7 @@
 							uni.saveVideoToPhotosAlbum({
 								filePath: res.tempFilePath,
 								success: () => {
-									$fu.toast('保存成功！')
+									$u.toast('保存成功！')
 									// 刷新用户信息(更新下载次数)
 									userStore.refreshUserInfo()
 									// 显示插屏广告
@@ -198,14 +198,14 @@
 								},
 								fail: err => {
 									console.error('[Wallpaper Btn] 视频保存失败:', err)
-									$fu.toast(`保存失败：${err.errMsg}`)
+									$u.toast(`保存失败：${err.errMsg}`)
 								}
 							});
 						} else {
 							uni.saveImageToPhotosAlbum({
 								filePath: res.tempFilePath,
 								success: () => {
-									$fu.toast('保存成功！')
+									$u.toast('保存成功！')
 									// 刷新用户信息(更新下载次数)
 									userStore.refreshUserInfo()
 									// 显示插屏广告
@@ -213,7 +213,7 @@
 								},
 								fail: err => {
 									console.error('[Wallpaper Btn] 图片保存失败:', err)
-									$fu.toast(`保存失败：${err.errMsg}`)
+									$u.toast(`保存失败：${err.errMsg}`)
 								}
 							});
 						}
@@ -225,12 +225,12 @@
 						// #endif
 					} else {
 						console.error('[Wallpaper Btn] 下载失败, statusCode:', res.statusCode)
-						$fu.toast('下载失败, 请稍后再试~')
+						$u.toast('下载失败, 请稍后再试~')
 					}
 				},
 				fail: (err) => {
 					console.error('[Wallpaper Btn] 下载文件失败:', err)
-					$fu.toast('下载失败, 请稍后再试~')
+					$u.toast('下载失败, 请稍后再试~')
 				},
 				complete: () => {
 					uni.hideLoading()
@@ -239,7 +239,7 @@
 		} catch (error) {
 			uni.hideLoading()
 			console.error('[Wallpaper Btn] 下载失败:', error)
-			$fu.toast(error.message || '下载失败')
+			$u.toast(error.message || '下载失败')
 		}
 	};
 
@@ -250,11 +250,11 @@
 			withShareTicket: true,
 			menus: ['shareAppMessage', 'shareTimeline']
 		})
-		$fu.toast('请点击右上角分享')
+		$u.toast('请点击右上角分享')
 		// #endif
 
 		// #ifndef MP-WEIXIN
-		$fu.toast('当前平台暂不支持分享功能')
+		$u.toast('当前平台暂不支持分享功能')
 		// #endif
 	}
 	

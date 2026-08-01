@@ -1,0 +1,540 @@
+/**
+ * 公共scss样式
+ */
+
+/* ------------------------------------------------- 共用 -----------------------------------------*/
+/*
+设置光标的类型（形状）
+pointer  光标呈现为指示链接的指针（一只手）
+*/
+/* #ifdef H5 */
+$cursor: (
+	default: auto,
+  	pointer: pointer,
+  	text: text,
+);
+@each $start, $long in $cursor {
+	.fu-#{$start} {
+	  cursor: $long;
+	}
+}
+/* #endif */
+
+/* #ifndef APP-NVUE */
+/* gap 间距 */
+$gap: (5, 10, 15, 20, 25, 30, 35, 40);
+@each $i in $gap {
+	// 结果如: fu-gap-20
+	.fu-gap-#{$i} {
+		gap: $i + rpx;
+	}
+}
+/* #endif */
+
+/* 遮罩层 */
+.fu-mask-layer {
+	width: 100%;
+	height: 100%;
+	background: #000000;
+	opacity: 0.5;
+	position: fixed;
+	z-index: 98;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+}
+
+/* flex 弹性布局 */
+.fu-flex {
+	/* #ifndef APP-NVUE */
+	display: -webkit-flex;
+	display: flex;
+	/* #endif */
+	/* #ifdef APP-NVUE */
+	flex-direction: row;
+	/* #endif */
+}
+
+/* flex 伸缩基准值 */
+/* #ifndef APP-NVUE */
+$flex-basis-values: (0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100);
+@each $i in $flex-basis-values {
+	// 结果如: fu-flex-basic-20
+	.fu-flex-basic-#{$i} {
+		flex-basis: #{$i * 1%}!important;
+	}
+}
+/* #endif */
+
+/* flex 布局 */
+$flex-properties: (
+	/* 方向 */ 
+	direction: (
+		column: column,
+		row: row,
+	),
+	/* flex 容器设置换行 */ 
+	wrap: (
+		wrap: wrap,
+		nowrap: nowrap,
+	),
+	/* flex 子元素垂直方向对齐方式 */
+	column: (
+		center: center,
+		start: flex-start,
+		end: flex-end,
+	),
+	/* flex子元素水平方向对齐方式 */
+	row: (
+		center: center,
+		start: flex-start,
+		end: flex-end,
+		between: space-between,
+		around: space-around
+	),
+	/* flex子元素空间分配 */
+	flex: (1, 2, 3, 4, 5)
+);
+// 生成 flex-direction 类
+@each $key, $values in $flex-properties {
+    @if $key == direction {
+        @each $start, $long in $values {
+			// 结果如: fu-flex-direction-column
+            .fu-flex-#{$key}-#{$start} {
+                flex-#{$key}: $long;
+            }
+        }
+    }
+	@if $key == wrap {
+		@each $start, $long in $values {
+			// 结果如: fu-flex-wrap
+			.fu-flex-#{$start} {
+				flex-wrap: $long;
+			}
+		}
+	}
+	@if $key == column {
+		@each $start, $long in $values {
+			// 结果如: fu-flex-column-center
+			.fu-flex-#{$key}-#{$start} {
+				align-items: $long;
+			}
+		}
+	}
+	@if $key == row {
+		@each $start, $long in $values {
+			// 结果如: fu-flex-row-center
+			.fu-flex-#{$key}-#{$start} {
+				justify-content: $long;
+			}
+		}
+	}
+	@if $key == flex {
+		@each $i in $values {
+			// 结果如: fu-flex-1
+			.fu-#{$key}-#{$i} {
+				flex: $i;
+			}
+		}
+	}
+    // 可以添加其他属性的处理
+}
+
+/* flex 设置不被压缩 */
+/* #ifndef APP-NVUE */
+.fu-flex-shrink {
+	flex-shrink: 0;
+}
+/* #endif */
+
+/* #ifndef APP-NVUE */
+/* white-space 空白字符是否合并，以及如何合并。是否换行，以及如何换行。 */
+$space-properties: (
+	normal: normal, // 默认。空白会被浏览器忽略
+	nowrap: nowrap, // 文本不会换行，文本会在在同一行上继续，直到遇到 <br> 标签为止
+	inherit: inherit, // 规定应该从父元素继承 white-space 属性的值
+	pre: pre, // 空白会被浏览器保留。其行为方式类似 HTML 中的 <pre> 标签
+	wrap: pre-wrap, // 保留空白符序列，但是正常地进行换行
+	lin: pre-line, // 合并空白符序列，但是保留换行符
+);
+@each $start, $long in $space-properties {
+	// 结果如: fu-white-space-normal
+	.fu-white-space-#{$start} {
+		white-space: $long;
+	}
+}
+
+/* vertical-align 属性设置元素的垂直对齐方式 */
+$vertical-align: (
+	baseline: baseline, // 默认。元素放置在父元素的基线上
+	sub: sub, // 垂直对齐文本的下标
+	super: super, // 垂直对齐文本的上标
+	top: top, // 把元素的顶端与行中最高元素的顶端对齐
+	text-top: text-top, // 把元素的顶端与父元素字体的顶端对齐
+	middle: middle, // 把此元素放置在父元素的中部
+	bottom: bottom, // 把元素的顶端与行中最低的元素的顶端对齐
+	text-bottom: text-bottom, // 把元素的底端与父元素字体的底端对齐
+	inherit: inherit, // 规定应该从父元素继承 vertical-align 属性的值
+);
+@each $start, $long in $space-properties {
+	// 结果如: fu-white-space-normal
+	.fu-vertical-align-#{$start} {
+		vertical-align: $long;
+	}
+}
+/* #endif */
+
+/* position 属性规定元素的定位类型 */
+$position: (
+	fixed: fixed, // 生成绝对定位的元素，相对于浏览器窗口进行定位
+	relative: relative, // 生成相对定位的元素，相对于其正常位置进行定位
+	absolute: absolute, // 生成绝对定位的元素，相对于 static 定位以外的第一个父元素进行定位
+	sticky: sticky, // 粘性定位
+);
+@each $start, $long in $position {
+	// 结果如: fu-fixed
+	.fu-#{$start} {
+		position: $long;
+	}
+}
+
+/* 盒子层级 */
+$z-index: (1, 9, 99, 999);
+@each $i in $z-index {
+	// 结果如: z-index-9
+	.z-index-#{$i} {
+		z-index: $i;
+	}
+}
+
+// 定义 top  left  right  bottom
+@for $i from 0 through 200 {
+	// fu-t-0  在相对盒子范围内
+	.fu-t-#{$i} {
+		top: $i + rpx!important;
+	}
+	
+	// fu-t--5  超出相对盒子范围
+	.fu-t--#{$i} {
+		top: - $i + rpx!important;
+	}
+	
+	// fu-b-0  在相对盒子范围内
+	.fu-b-#{$i} {
+		bottom: $i + rpx!important;
+	}
+	
+	// fu-b--5  超出相对盒子范围
+	.fu-b--#{$i} {
+		bottom: - $i + rpx!important;
+	}
+	
+	// fu-l-0  在相对盒子范围内
+	.fu-l-#{$i} {
+		left: $i + rpx!important;
+	}
+	
+	// fu-l--5  超出相对盒子范围
+	.fu-l--#{$i} {
+		left: - $i + rpx!important;
+	}
+	
+	// fu-r-0  在相对盒子范围内
+	.fu-r-#{$i} {
+		right: $i + rpx!important;
+	}
+	
+	// fu-r--5  超出相对盒子范围
+	.fu-r--#{$i} {
+		right: - $i + rpx!important;
+	}
+}
+
+// 定义内外边距
+@for $i from 0 through 100 {
+	// 只要双数和能被5除尽的数
+	@if $i % 2 == 0 or $i % 5 == 0 {
+		// 得出：fu-m-30
+		.fu-m-#{$i} {
+			margin: $i + rpx!important;
+		}
+		
+		// 缩写版，结果如： fu-m-x-30
+		.fu-m-x-#{$i} {
+			margin-left: $i + rpx !important;
+			margin-right: $i + rpx !important;
+		}
+		
+		// 缩写版，结果如： fu-m-y-30
+		.fu-m-y-#{$i} {
+			margin-top: $i + rpx !important;
+			margin-bottom: $i + rpx !important;
+		}
+		
+		// 得出：fu-p-30
+		.fu-p-#{$i} {
+			padding: $i + rpx!important;
+		}
+		
+		// 缩写版，结果如： fu-p-x-30
+		.fu-p-x-#{$i} {
+			padding-left: $i + rpx!important;
+			padding-right: $i + rpx!important;
+		}
+		
+		// 缩写版，结果如： fu-p-y-30
+		.fu-p-y-#{$i} {
+			padding-top: $i + rpx!important;
+			padding-bottom: $i + rpx!important;
+		}
+		
+		@each $short, $long in l left, t top, r right, b bottom {
+			// 缩写版，结果如： fu-m-l-30
+			// 定义外边距
+			.fu-m-#{$short}-#{$i} {
+				margin-#{$long}: $i + rpx!important;
+			}
+			
+			// 缩写版，结果如： fu-m-l--30
+			.fu-m-#{$short}--#{$i} {
+				margin-#{$long}: - $i + rpx!important;
+			}
+			
+			// 定义内边距
+			.fu-p-#{$short}-#{$i} {
+				padding-#{$long}: $i + rpx!important;
+			}
+			
+			// 完整版，结果如：fu-margin-left-30
+			// 定义外边距
+			.fu-margin-#{$long}-#{$i} {
+				margin-#{$long}: $i + rpx!important;
+			}
+			
+			// 定义内边距
+			.fu-padding-#{$long}-#{$i} {
+				padding-#{$long}: $i + rpx!important;
+			}
+		}
+	}
+}
+
+@each $short, $long in l left, r right, t top, b bottom {
+	// 定义外间距最后一个为0
+	.fu-m-l-#{$short}:last-child {
+		margin-#{$long}: 0 !important;
+	}
+	
+	// 定义外间距第一个为0
+	.fu-m-f-#{$short}:first-child {
+		margin-#{$long}: 0 !important;
+	}
+	
+	// 定义边框第一个为0
+	.fu-br-#{$short}:last-child {
+		border-#{$long}: 0 !important;
+	}
+}
+
+// 定义圆角border-radius
+@for $i from 0 through 100 {
+	// 只要双数和能被5除尽的数
+	@if $i % 2 == 0 or $i % 5 == 0 {
+		// 得出：fu-b-r-30
+		.fu-b-r-#{$i} {
+			border-radius: $i + rpx!important;
+		}
+		
+		.fu-b-r-p-#{$i} {
+			border-radius: #{$i * 1%} !important;
+		}
+		
+		/* #ifndef APP-NVUE */
+		@each $short, $long in l left, t top, r right, b bottom {
+			// 缩写版，结果如： fu-b-r-t-30/fu-b-r-t-30
+			// 定义top圆角
+			.fu-b-r-t-#{$i} {
+				border-top-#{$long}-radius: $i + rpx!important;
+				border-top-#{$long}-radius: $i + rpx!important;
+			}
+			
+			// 完整版，结果如：fu-b-r-b-30/fu-b-r-b-30
+			// 定义bottom圆角
+			.fu-b-r-b-#{$i} {
+				border-bottom-#{$long}-radius: $i + rpx!important;
+				border-bottom-#{$long}-radius: $i + rpx!important;
+			}
+			
+			// 缩写版，结果如： fu-b-r-t-l-30/fu-b-r-t-r-30
+			// 定义top-left, top-right圆角
+			.fu-b-r-t-#{$short}-#{$i} {
+				border-top-#{$long}-radius: $i + rpx!important;
+				border-top-#{$long}-radius: $i + rpx!important;
+			}
+			
+			// 完整版，结果如：fu-b-r-b-l-30/fu-b-r-b-r-30
+			// 定义bottom-left, bottom-right圆角
+			.fu-b-r-b-#{$short}-#{$i} {
+				border-bottom-#{$long}-radius: $i + rpx!important;
+				border-bottom-#{$long}-radius: $i + rpx!important;
+			}
+		}
+		/* #endif */
+	}
+}
+
+// 定义宽度
+@for $i from 0 through 750 {
+	.fu-w-#{$i} {
+		width: $i+rpx!important;
+	}
+	
+	/* #ifndef APP-NVUE */
+	.fu-min-w-#{$i} { // 最小高度
+		min-width: $i+rpx!important;
+	}
+	
+	.fu-max-w-#{$i} { // 最大高度
+		max-width: $i+rpx!important;
+	}
+	/* #endif */
+}
+
+// 定义高度  垂直高度  最小高度  最大高度
+@for $i from 0 through 200 {
+	.fu-h-#{$i} { // 高度
+		height: $i + rpx!important;
+	}
+	
+	.fu-l-h-#{$i} { // 垂直高度
+		line-height: $i + rpx!important;
+	}
+	
+	/* #ifndef APP-NVUE */
+	.fu-min-h-#{$i} { // 最小高度
+		min-height: $i + rpx!important;
+	}
+	
+	.fu-max-h-#{$i} { // 最大高度
+		max-height: $i + rpx!important;
+	}
+	/* #endif */
+}
+
+// 定义透明度
+@for $i from 0 through 10 {
+	.fu-opacity-#{$i} {
+		opacity: $i * 0.1;
+	}
+}
+
+/* #ifndef APP-NVUE */
+/* start--iPhone底部安全区定义--start */
+@each $d in top, right, bottom, left {
+    .fu-safe-area-inset-#{$d} {
+        padding-#{$d}: 0;
+        padding-#{$d}: constant(safe-area-inset-#{$d});
+        padding-#{$d}: env(safe-area-inset-#{$d});
+    }
+}
+/* end-iPhone底部安全区定义--end */
+/* #endif */
+
+// 去除button的所有默认样式，让其表现跟普通的view、text元素一样
+.fu-reset-button {
+	padding: 0;
+	background-color: transparent;
+	/* #ifndef APP-PLUS */
+	font-size: inherit;
+	line-height: inherit;
+	color: inherit;
+	/* #endif */
+	/* #ifdef APP-NVUE */
+	border-width: 0;
+	/* #endif */
+	margin: 0;
+}
+
+/* #ifndef APP-NVUE */
+.fu-reset-button::after {
+   border: none;
+}
+/* #endif */
+
+/* ------------------------------------------------- 文本 --------------------------------------- */
+
+// 定义字体大小
+@for $i from 0 through 100 {
+	.fu-font-#{$i} {
+		font-size: $i + rpx!important;
+	}
+}
+
+// 定义字重
+$font-weight: (
+	n: normal, // 默认值。定义标准的字符
+	b: bold, // 定义粗体字符
+	1: 100, 2: 200, 3: 300, 4: 400, 5: 500, 6: 600, 7: 700, 8: 800, 9: 900
+);
+
+@each $short, $long in $font-weight {
+	.fu-font-#{$short} {
+		font-weight: $long;
+	}
+}
+
+// 超出行数，自动显示行尾省略号，最多5行
+@for $i from 1 through 5 {
+	.fu-line-#{$i} {
+		/* #ifdef APP-NVUE */
+		// nvue下，可以直接使用lines属性，这是weex特有样式
+		lines: $i;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		flex: 1;
+		/* #endif */
+
+		/* #ifndef APP-NVUE */
+		// vue下，单行和多行显示省略号需要单独处理
+		@if $i == '1' {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		} @else {
+			display: -webkit-box!important;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			word-break: break-all;
+			-webkit-line-clamp: $i;
+			-webkit-box-orient: vertical!important;
+		}
+		/* #endif */
+	}
+}
+
+// 文本  underline下划线  line-through删除线
+@each $start, $long in underline underline, line-through line-through {
+	.fu-text-#{$start} {
+		text-decoration: $long !important;
+	}
+}
+
+// 超出隐藏
+.fu-hidden {
+	overflow: hidden;
+}
+
+// 定义文本显示方向
+$text-align: (
+	l: left, // 把文本排列到左边。默认值：由浏览器决定
+	r: right, // 把文本排列到右边
+	c: center, // 把文本排列到中间
+	j: justify, // 实现两端对齐文本效果
+	i: inherit, // 规定应该从父元素继承 text-align 属性的值
+);
+
+@each $start, $long in l left, r right, c center {
+	.fu-text-#{$start} {
+		text-align: $long !important;
+	}
+}

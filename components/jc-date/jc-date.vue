@@ -9,17 +9,17 @@
 	import { getCurrentInstance, computed } from 'vue';
 	
 	// data数据
-	const { $fu } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u } = getCurrentInstance().appContext.config.globalProperties;
 	
 	// computed计算属性
 	const timestamp = computed(() => {
-		return new Date().getTime() / 1000
+		return Math.floor(new Date().getTime() / 1000)
 	});
 	const time = computed(() => {
-		return $fu.formatTime(timestamp.value, 'h:m')
+		return $u.timeFormat(timestamp.value, 'hh:MM')
 	});
 	const date = computed(() => {
-		return $fu.formatTime(timestamp.value, 'M月D日')
+		return $u.timeFormat(timestamp.value, 'mm月dd日')
 	});
 </script>
 

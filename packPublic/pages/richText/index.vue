@@ -1,14 +1,14 @@
 <template>
   <page-layout customClass="navbar__content">
-    <fu-nav-bar
+    <app-nav-bar
       bgColor="rgba(0, 0, 0, 0.2)"
-      leftIcon="left"
+      leftIcon="arrow-left"
       :title="navTitle"
       color="#ffffff"
       :border="false"
       fixed
       @clickLeft="$mUtil.overBack()"
-    ></fu-nav-bar>
+    ></app-nav-bar>
 
     <view class="rich-text-page">
       <view class="content">

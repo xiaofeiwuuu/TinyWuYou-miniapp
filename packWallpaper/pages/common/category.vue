@@ -1,6 +1,6 @@
 <template>
 	<page-layout>
-		<fu-nav-bar bgColor="#111111" leftIcon="left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="#111111" leftIcon="arrow-left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<view class="fu-p-b-80 fu-m-30">
 			<view class="fu-m-t-20">
@@ -91,7 +91,7 @@ const handleCategoryClick = (category) => {
 	z-index: 2;
 }
 
-:deep(.fu-nav-bar-text) {
+:deep(.app-nav-bar-text) {
 	font-weight: bold;
 }
 </style>

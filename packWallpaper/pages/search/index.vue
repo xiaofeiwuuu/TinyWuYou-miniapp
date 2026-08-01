@@ -1,16 +1,16 @@
 <template>
 	<page-layout>
-		<fu-nav-bar bgColor="transparent" leftIcon="left" :border="false" color="#ffffff" title="搜索" fixed @clickLeft="$mUtil.overBack()" />
+		<app-nav-bar bgColor="transparent" leftIcon="arrow-left" :border="false" color="#ffffff" title="搜索" fixed @clickLeft="$mUtil.overBack()" />
 		
 		<view class="fu-m-x-30">
 			<view class="fu-bg-222222 fu-b-r-15">
-				<fu-search height="40px" inputAlign="left" bgColor="transparent" color="#ffffff" :showAction="false" @confirm="handleSearch"></fu-search>
+				<up-search height="40px" inputAlign="left" bgColor="transparent" color="#ffffff" :showAction="false" @search="handleSearch"></up-search>
 			</view>
 			
 			<block v-if="wallpaperHistoryStorage.length">
 				<jc-section title="搜索历史" :family="false" size="30" margin="10rpx 0 0">
 					<view class="fu-p-30 fu-m-r--30" @click="handleRemove">
-						<fu-icons type="trash-can" color="#ffffff" size="16"></fu-icons>
+						<up-icon name="trash" color="#ffffff" size="16"></up-icon>
 					</view>
 				</jc-section>
 				<view class="fu-flex fu-flex-wrap fu-gap-30">
@@ -42,7 +42,7 @@
 	import { onShow } from '@dcloudio/uni-app';
 	
 	// data数据
-	const { $fu, $mUtil, $openPage } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 	let wallpaperHistoryStorage = ref([]); // 搜索历史
 	let thinkSearch = ref([
 		{name: '景深'},
@@ -66,8 +66,9 @@
 	
 	// methods方法
 	// 处理搜索
-	const handleSearch = (e) => {
-		if(!$fu.trim(e.value)) return $fu.toast('请输入搜索关键词~')
+	const handleSearch = (value) => {
+		if(!$u.trim(value)) return $u.toast('请输入搜索关键词~')
+		const e = { value }
 		$mUtil.searchStorage({key: 'wallpaperHistoryStorage', data: e})
 		$openPage({name: 'wallpaperSearchList', query: e})
 	};

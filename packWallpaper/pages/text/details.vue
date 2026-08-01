@@ -1,6 +1,6 @@
 <template>
 	<page-layout>
-		<fu-nav-bar bgColor="#111111" leftIcon="left" title="文案详情" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="#111111" leftIcon="arrow-left" title="文案详情" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<view class="text-details-container">
 			<!-- 文案内容 -->
@@ -16,7 +16,7 @@
 
 				<!-- 分类标签 -->
 				<view v-if="data.category" class="text-category">
-					<fu-icons type="tag" color="#999999" size="24"></fu-icons>
+					<up-icon name="tags" color="#999999" size="24"></up-icon>
 					<text class="category-text">{{ data.category.name }}</text>
 				</view>
 
@@ -26,12 +26,12 @@
 				<!-- 操作按钮 -->
 				<view class="action-buttons">
 					<view class="action-btn primary-btn" @click="handleCopy">
-						<fu-icons type="copy" color="#ffffff" size="28"></fu-icons>
+						<up-icon name="file-text" color="#ffffff" size="28"></up-icon>
 						<text class="btn-text">复制文案</text>
 					</view>
 
 					<view class="action-btn secondary-btn" @click="handleShare">
-						<fu-icons type="share" color="#ffffff" size="28"></fu-icons>
+						<up-icon name="share-square" color="#ffffff" size="28"></up-icon>
 						<text class="btn-text">分享</text>
 					</view>
 				</view>
@@ -61,7 +61,7 @@
 
 						<!-- 复制按钮 -->
 						<view class="mini-copy-btn" @click.stop="handleCopyRecommend(item)">
-							<fu-icons type="copy" color="#999999" size="18"></fu-icons>
+							<up-icon name="file-text" color="#999999" size="18"></up-icon>
 						</view>
 					</view>
 				</view>
@@ -76,7 +76,7 @@
 	import { getTextDetail, copyText, getRecommendTexts } from '@/packWallpaper/api/text.js';
 
 	// data数据
-	const { $fu, $mUtil, $parseURL, $openPage } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $parseURL, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 
 	let data = ref({
 		id: null,
@@ -131,11 +131,11 @@
 				console.log('[TextDetails] 文案详情加载成功');
 			} else {
 				console.error('[TextDetails] 加载失败:', res.message);
-				$fu.toast('加载失败');
+				$u.toast('加载失败');
 			}
 		} catch (error) {
 			console.error('[TextDetails] 加载异常:', error);
-			$fu.toast('加载失败');
+			$u.toast('加载失败');
 		} finally {
 			loading.value = false;
 		}
@@ -164,7 +164,7 @@
 			uni.setClipboardData({
 				data: data.value.content,
 				success: async () => {
-					$fu.toast('复制成功');
+					$u.toast('复制成功');
 
 					// 调用后端记录复制
 					try {
@@ -175,12 +175,12 @@
 				},
 				fail: (err) => {
 					console.error('[TextDetails] 复制失败:', err);
-					$fu.toast('复制失败');
+					$u.toast('复制失败');
 				}
 			});
 		} catch (error) {
 			console.error('[TextDetails] 复制异常:', error);
-			$fu.toast('复制失败');
+			$u.toast('复制失败');
 		}
 	};
 
@@ -191,11 +191,11 @@
 			withShareTicket: true,
 			menus: ['shareAppMessage', 'shareTimeline']
 		});
-		$fu.toast('请点击右上角分享');
+		$u.toast('请点击右上角分享');
 		// #endif
 
 		// #ifndef MP-WEIXIN
-		$fu.toast('当前平台暂不支持分享功能');
+		$u.toast('当前平台暂不支持分享功能');
 		// #endif
 	};
 
@@ -223,7 +223,7 @@
 			uni.setClipboardData({
 				data: item.content,
 				success: async () => {
-					$fu.toast('复制成功');
+					$u.toast('复制成功');
 
 					try {
 						await copyText(item.id);
@@ -233,12 +233,12 @@
 				},
 				fail: (err) => {
 					console.error('[TextDetails] 复制失败:', err);
-					$fu.toast('复制失败');
+					$u.toast('复制失败');
 				}
 			});
 		} catch (error) {
 			console.error('[TextDetails] 复制异常:', error);
-			$fu.toast('复制失败');
+			$u.toast('复制失败');
 		}
 	};
 

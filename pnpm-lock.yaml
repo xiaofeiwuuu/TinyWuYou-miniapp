@@ -11,15 +11,15 @@ importers:
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
-      fusions-ui:
-        specifier: ^1.0.8
-        version: 1.1.9
-      jsencrypt:
-        specifier: ^3.5.4
-        version: 3.5.4
+      node-forge:
+        specifier: ^1.4.0
+        version: 1.4.0
       pinia:
         specifier: ^3.0.3
         version: 3.0.3(vue@3.5.22)
+      uview-plus:
+        specifier: ^3.8.86
+        version: 3.8.86
 
 packages:
 
@@ -101,18 +101,12 @@ packages:
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
-  fusions-ui@1.1.9:
-    resolution: {integrity: sha512-EdXGP/NS2hWp3Njv8zHx7+rifpwaex0j7Llrdodbk8iABCgTbBzog0hs06G1bJjF5dn5aAPVShHFwNORV2rZcQ==}
-
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
 
   is-what@4.1.16:
     resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
     engines: {node: '>=12.13'}
-
-  jsencrypt@3.5.4:
-    resolution: {integrity: sha512-kNjfYEMNASxrDGsmcSQh/rUTmcoRfSUkxnAz+MMywM8jtGu+fFEZ3nJjHM58zscVnwR0fYmG9sGkTDjqUdpiwA==}
 
   magic-string@0.30.19:
     resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
@@ -124,6 +118,10 @@ packages:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+
+  node-forge@1.4.0:
+    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
+    engines: {node: '>= 6.13.0'}
 
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
@@ -158,6 +156,10 @@ packages:
   superjson@2.2.2:
     resolution: {integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==}
     engines: {node: '>=16'}
+
+  uview-plus@3.8.86:
+    resolution: {integrity: sha512-L/Rc9MfJ7Z+YVe5EQZ2yhkTUBqshvTsIQMKpkoWWgQPV/kGAOmiP3zxAWftkpQ38bmiIHVVLteJqi6KqIzevZw==}
+    engines: {HBuilderX: ^3.1.0, uni-app: ^4.66, uni-app-x: ''}
 
   vue@3.5.22:
     resolution: {integrity: sha512-toaZjQ3a/G/mYaLSbV+QsQhIdMo9x5rrqIpYRObsJ6T/J+RyCSFwN2LHNVH9v8uIcljDNa3QzPVdv3Y6b9hAJQ==}
@@ -270,13 +272,9 @@ snapshots:
 
   estree-walker@2.0.2: {}
 
-  fusions-ui@1.1.9: {}
-
   hookable@5.5.3: {}
 
   is-what@4.1.16: {}
-
-  jsencrypt@3.5.4: {}
 
   magic-string@0.30.19:
     dependencies:
@@ -285,6 +283,8 @@ snapshots:
   mitt@3.0.1: {}
 
   nanoid@3.3.11: {}
+
+  node-forge@1.4.0: {}
 
   perfect-debounce@1.0.0: {}
 
@@ -310,6 +310,8 @@ snapshots:
   superjson@2.2.2:
     dependencies:
       copy-anything: 3.0.5
+
+  uview-plus@3.8.86: {}
 
   vue@3.5.22:
     dependencies:

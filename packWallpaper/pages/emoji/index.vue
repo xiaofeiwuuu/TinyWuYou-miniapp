@@ -1,10 +1,10 @@
 <template>
 	<page-layout>
-		<fu-nav-bar bgColor="#111111" leftIcon="left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="#111111" leftIcon="arrow-left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
-		<fu-sticky bgColor="#111111" :customNavHeight="customNavHeight">
-			<fu-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="handleTabs" />
-		</fu-sticky>
+		<up-sticky bgColor="#111111" :customNavHeight="customNavHeight">
+			<up-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="handleTabs" />
+		</up-sticky>
 
 		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
 			<jc-grid :list="list" :column="3" multiple="1" @click="handleImageClick" />
@@ -20,7 +20,7 @@
 	import { getImageList } from '@/packWallpaper/api/image.js';
 
 	// data数据
-	const { $fu, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
 	const categoryStore = useCategoryStore();
 
 	let title = ref('表情包');
@@ -75,7 +75,7 @@
 
 	// computed计算属性
 	const customNavHeight = computed(() => {
-		return $mUtil.pxToRpx($fu.sys().statusBarHeight + 44)
+		return $mUtil.pxToRpx($u.sys().statusBarHeight + 44)
 	});
 
 	// methods方法
@@ -168,7 +168,7 @@
 </script>
 
 <style lang="scss" scoped>
-	:deep(.fu-nav-bar-text) {
+	:deep(.app-nav-bar-text) {
 		font-weight: bold;
 	}
 </style>

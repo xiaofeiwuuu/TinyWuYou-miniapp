@@ -1,6 +1,6 @@
 <template>
 	<page-layout>
-		<fu-nav-bar bgColor="#111111" leftIcon="left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></fu-nav-bar>
+		<app-nav-bar bgColor="#111111" leftIcon="arrow-left" :title="title" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<view class="content-wrapper">
 			<!-- 图片网格 -->
@@ -82,7 +82,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { getImageList } from '@/packWallpaper/api/image.js';
 
 // data数据
-const { $fu, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
+const { $u, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
 
 let title = ref('');
 let categoryId = ref(null);
@@ -117,7 +117,7 @@ const detailsPageMap = {
 
 // 计算导航栏高度
 const navHeight = computed(() => {
-	return $fu.sys().statusBarHeight + 44;
+	return $u.sys().statusBarHeight + 44;
 });
 
 // 生成可见页码列表
@@ -424,7 +424,7 @@ const handleImageClick = (image) => {
 	color: #ffffff;
 }
 
-:deep(.fu-nav-bar-text) {
+:deep(.app-nav-bar-text) {
 	font-weight: bold;
 }
 </style>
