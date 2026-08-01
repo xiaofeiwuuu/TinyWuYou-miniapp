@@ -41,7 +41,8 @@ class KeyManager {
 		const storageKey = '__client_id__'
 		let clientId = uni.getStorageSync(storageKey)
 
-		if (!clientId) {
+		// 服务端要求 clientId 为 32-64 位的 [A-Za-z0-9_-]
+		if (!clientId || clientId.length < 32) {
 			clientId = CryptoUtil.generateRandomId(32)
 			uni.setStorageSync(storageKey, clientId)
 		}
@@ -72,8 +73,15 @@ class KeyManager {
 	}
 
 	/**
-	 * 与服务端进行密钥交换 (简化版,适用于小程序)
-	 * 服务端生成密钥并直接返回(HTTPS保证安全)
+	 * 与服务端进行密钥交换
+	 *
+	 * 流程（与管理后台一致）:
+	 * 1. 获取服务端公钥
+	 * 2. 客户端本地生成 AES 密钥
+	 * 3. 用服务端公钥加密该 AES 密钥
+	 * 4. 把密文发给服务端，服务端用私钥解密并存储
+	 *
+	 * AES 密钥由客户端生成、加密后上送，服务端不会把密钥明文下发给任何人。
 	 */
 	async exchangeKey() {
 		// 如果已经有密钥，直接返回
@@ -105,45 +113,35 @@ class KeyManager {
 		try {
 			console.log('[KeyManager] 🔐 开始密钥交换...')
 
-			// 发送 clientId 到服务端,服务端生成并返回 AES 密钥
-			const response = await new Promise((resolve, reject) => {
-				uni.request({
-					url: config.baseUrl + '/auth/exchange-key-simple',
-					method: 'POST',
-					data: {
-						clientId: this.clientId
-					},
-					header: {
-						'Content-Type': 'application/json',
-						'x-client-id': this.clientId
-					},
-					success: (res) => {
-						console.log('[KeyManager] 服务端响应:', res.statusCode, res.data)
-						// NestJS @Post 默认返回 201，所以接受 200 或 201
-						if ((res.statusCode === 200 || res.statusCode === 201) && res.data.code === 0) {
-							resolve(res.data.data)
-						} else {
-							reject(new Error(`密钥交换失败: ${res.data.message || '未知错误'}`))
-						}
-					},
-					fail: (err) => {
-						console.error('[KeyManager] 请求失败:', err)
-						reject(err)
-					}
-				})
+			// 步骤 1: 获取服务端公钥
+			const publicKeyData = await this.request('GET', '/auth/public-key')
+			if (!publicKeyData || !publicKeyData.publicKey) {
+				throw new Error('获取服务端公钥失败')
+			}
+			this.serverPublicKey = publicKeyData.publicKey
+
+			// 步骤 2: 用服务端随机数 + 本机熵派生 AES 密钥 (256-bit)。
+			// 小程序运行时没有 crypto.getRandomValues，纯本地生成的密钥是可预测的。
+			const aesKey = CryptoUtil.deriveAesKey(publicKeyData.serverRandom)
+
+			// 步骤 3: 用服务端公钥加密
+			const encryptedAesKey = CryptoUtil.rsaEncrypt(aesKey, this.serverPublicKey)
+
+			// 步骤 4: 上送密文
+			const response = await this.request('POST', '/auth/exchange-key', {
+				clientId: this.clientId,
+				encryptedAesKey,
+				keyVersion: publicKeyData.version
 			})
 
-			if (!response || !response.success || !response.aesKey) {
-				throw new Error('服务端密钥交换失败: 响应数据不完整')
+			if (!response || !response.success) {
+				throw new Error('服务端密钥交换失败')
 			}
 
-			// 保存服务端生成的 AES 密钥
-			this.aesKey = response.aesKey
+			this.aesKey = aesKey
 			uni.setStorageSync('__aes_key__', this.aesKey)
 
-			console.log('[KeyManager] ✅ 密钥交换成功!')
-			console.log('[KeyManager] 密钥已保存，长度:', this.aesKey.length)
-			console.log('[KeyManager] 🔒 HTTPS 加密传输保证密钥安全')
+			console.log('[KeyManager] ✅ 密钥交换成功，长度:', this.aesKey.length)
 
 			return Promise.resolve()
 		} catch (error) {
@@ -155,6 +153,32 @@ class KeyManager {
 		} finally {
 			this.isExchanging = false
 		}
+	}
+
+	/**
+	 * 密钥交换阶段的裸请求（此时还没有 AES 密钥，不能走带加密的 request.js）
+	 */
+	request(method, path, data) {
+		return new Promise((resolve, reject) => {
+			uni.request({
+				url: config.baseUrl + path,
+				method,
+				data,
+				header: {
+					'Content-Type': 'application/json',
+					'x-client-id': this.clientId
+				},
+				success: (res) => {
+					// NestJS @Post 默认返回 201，所以接受 200 或 201
+					if ((res.statusCode === 200 || res.statusCode === 201) && res.data && res.data.code === 0) {
+						resolve(res.data.data)
+					} else {
+						reject(new Error(`${path} 请求失败: ${(res.data && res.data.message) || res.statusCode}`))
+					}
+				},
+				fail: reject
+			})
+		})
 	}
 
 	/**

@@ -5,7 +5,6 @@ import { CryptoUtil } from '@/util/crypto.js'
 // 不需要加密的路由（仅限密钥交换、登录等必要接口）
 const skipRoutes = [
 	'/auth/exchange-key',
-	'/auth/exchange-key-simple',
 	'/auth/public-key',
 	'/auth/wx-login',
 	'/auth/logout',
@@ -68,21 +67,45 @@ async function request(options, isRetry = false) {
 	const aesKey = keyManager.getAesKey()
 	const method = (options.method || 'GET').toUpperCase()
 
-	// 加密请求数据（仅 POST/PUT/PATCH 等非 GET 请求才加密 body）
-	// GET 请求的参数会变成 URL 查询字符串，加密后后端无法解析
-	if (needEncrypt && aesKey && method !== 'GET' && requestData && Object.keys(requestData).length > 0) {
-		try {
-			const encrypted = CryptoUtil.aesEncrypt(JSON.stringify(requestData), aesKey)
-			requestData = { encrypted }
-		} catch (error) {
-			console.error('[Request] 加密失败:', error)
-		}
-	}
-
 	// 准备请求头
 	const headers = options.header || { 'Content-Type': 'application/json' }
 	headers['x-client-id'] = keyManager.getClientId()
-	// headers['Referer'] = 'server.xiaofeiwuuu.top'
+
+	// 加密请求体并签名（仅 POST/PUT/PATCH/DELETE 等非 GET 请求）
+	// GET 请求的参数会变成 URL 查询字符串，加密后后端无法解析
+	//
+	// 注意：这里原来只加密不签名，而服务端对所有非 GET 请求都要求
+	// x-timestamp / x-signature —— 下载、收藏、签到、兑换全都会被拒。
+	if (needEncrypt && aesKey && method !== 'GET') {
+		try {
+			const timestamp = Date.now().toString()
+			const nonce = CryptoUtil.generateNonce()
+
+			let encrypted = ''
+			if (method !== 'DELETE' || (requestData && Object.keys(requestData).length > 0)) {
+				// timestamp 一并加密进 body，服务端解密后会剔除
+				const payload = { ...(requestData || {}), timestamp }
+				encrypted = CryptoUtil.aesEncrypt(JSON.stringify(payload), aesKey)
+				requestData = { encrypted }
+			}
+
+			// 服务端拿到的 path 带 /api 前缀且不含查询串
+			const path = `/api${url.split('?')[0]}`
+
+			headers['x-timestamp'] = timestamp
+			headers['x-nonce'] = nonce
+			headers['x-signature'] = CryptoUtil.buildSignature({
+				method,
+				path,
+				timestamp,
+				nonce,
+				body: encrypted,
+				aesKey
+			})
+		} catch (error) {
+			console.error('[Request] 加密或签名失败:', error)
+		}
+	}
 
 	// 添加 token（如果存在）
 	const token = uni.getStorageSync('token')

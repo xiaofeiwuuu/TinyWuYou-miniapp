@@ -6,9 +6,9 @@ import request from './request.js'
  * @param {string} nickname - 用户昵称（可选）
  * @param {string} avatarUrl - 用户头像（可选）
  * @param {string} platform - 平台标识(weixin/xiaohongshu/douyin/alipay)
- * @param {string} inviterId - 邀请者ID（可选）
+ * @param {string} inviteCode - 邀请码（来自分享链接，可选）
  */
-export function wxLogin(code, nickname, avatarUrl, platform = 'weixin', inviterId) {
+export function wxLogin(code, nickname, avatarUrl, platform = 'weixin', inviteCode) {
 	return request({
 		url: '/auth/wx-login',
 		method: 'POST',
@@ -17,7 +17,7 @@ export function wxLogin(code, nickname, avatarUrl, platform = 'weixin', inviterI
 			nickname,
 			avatarUrl,
 			platform,
-			inviterId
+			inviteCode
 		}
 	})
 }
