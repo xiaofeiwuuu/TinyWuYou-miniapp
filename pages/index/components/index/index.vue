@@ -9,7 +9,7 @@
 		<!-- <up-tabs :list="tabsList" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="onClick('tabs', $event)" /> -->
 		
 		<!-- <view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
-			<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />
+			<jc-grid :list="list" @click="onClick('imageDetail', $event)" />
 			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view> -->
 	</view>

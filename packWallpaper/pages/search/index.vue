@@ -8,7 +8,12 @@
 			</view>
 			
 			<block v-if="wallpaperHistoryStorage.length">
-				<jc-section title="搜索历史" :family="false" size="30" margin="10rpx 0 0">
+				<!--
+					三处标题都去掉了 size="30"，回到 jc-section 的默认值（22 → 44rpx ≈ 22px），
+					和首页各区块、文案分类保持一致。原来 30 实际渲染成 60rpx（≈30px），
+					比下面的标签文字（fu-font-24 = 24rpx）大了 2.5 倍。
+				-->
+				<jc-section title="搜索历史" :family="false" margin="10rpx 0 0">
 					<view class="fu-p-30 fu-m-r--30" @click="handleRemove">
 						<up-icon name="trash" color="#ffffff" size="16"></up-icon>
 					</view>
@@ -21,7 +26,7 @@
 			</block>
 			
 			<view class="">
-				<jc-section title="猜你想搜" :family="false" size="30" margin="40rpx 0 30rpx" :showRight="false" />
+				<jc-section title="猜你想搜" :family="false" margin="40rpx 0 30rpx" :showRight="false" />
 				<view class="fu-flex fu-flex-wrap fu-gap-30">
 					<view class="fu-bg-222222 fu-p-x-30 fu-p-y-10 fu-font-24 fu-b-r-30 fu-hidden" v-for="(item,index) in thinkSearch" :key="index">
 						{{ item.name || '' }}
@@ -30,7 +35,7 @@
 			</view>
 			
 			<view class="">
-				<jc-section title="猜你喜欢" :family="false" size="30" margin="40rpx 0 0" :showRight="false" />
+				<jc-section title="猜你喜欢" :family="false" margin="40rpx 0 0" :showRight="false" />
 				<!-- 广告位 -->
 			</view>
 		</view>

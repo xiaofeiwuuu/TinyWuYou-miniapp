@@ -7,39 +7,60 @@
 		</up-sticky>
 
 		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
-			<jc-grid :list="list" :column="3" multiple="1" @click="handleImageClick" />
+			<!--
+				virtual：列表会随下拉不断累加，几万张图的分类里节点会线性增长到卡顿。
+				等高网格可以精确算出可视行，只渲染窗口内的格子，节点数恒定。
+			-->
+			<jc-grid
+				:list="list"
+				:column="grid.column"
+				:multiple="grid.multiple"
+				virtual
+				:scroll-top="scrollTop"
+				@click="handleImageClick"
+			/>
 			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view>
 	</page-layout>
 </template>
 
 <script setup>
+	/**
+	 * 通用图片列表页。
+	 *
+	 * 原来 avatar / mobile / desktop / emoji / sticker 五个页面各有一份 index.vue，
+	 * 彼此只差标题、类型名、日志前缀和网格参数（emoji 与 sticker 仅相差 24 行），
+	 * 现在合并成这一个页面：
+	 *   - 类型和标题从路由参数来
+	 *   - 网格布局由后端配置的朝向决定（竖图/横图/方图），后台加类型不用发版
+	 */
 	import { getCurrentInstance, ref, computed } from 'vue';
-	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+	import { onLoad, onReachBottom, onPageScroll } from '@dcloudio/uni-app';
 	import { useCategoryStore } from '@/stores/category.js';
+	import { useImageTypeStore } from '@/stores/imageType.js';
 	import { getImageList } from '@/packWallpaper/api/image.js';
 
 	// data数据
 	const { $u, $mUtil, $mConstDataConfig, $openPage, $parseURL } = getCurrentInstance().appContext.config.globalProperties;
 	const categoryStore = useCategoryStore();
+	const imageTypeStore = useImageTypeStore();
 
-	let title = ref('表情包');
-	let imageType = ref('emoji'); // 当前图片类型
+	let title = ref('');
+	let imageType = ref(''); // 当前图片类型
 	let currentCategoryId = ref(null); // 当前选中的分类ID
+
+	// 网格布局（列数与高宽比）由该类型的朝向决定
+	const grid = computed(() => imageTypeStore.getGridConfig(imageType.value));
 
 	// 分类标签列表 - 从 store 动态获取
 	const tabsList = computed(() => {
 		if (!categoryStore.categories || !imageType.value) return [];
-
-		// 获取对应类型的分类列表
 		const categories = categoryStore.categories[imageType.value] || [];
-
-		// 转换为 tabs 格式
-		return categories.map(cat => ({
-			id: cat.id,
-			name: cat.name
-		}));
+		return categories.map(cat => ({ id: cat.id, name: cat.name }));
 	});
+
+	// 页面滚动距离，传给 jc-grid 做虚拟滚动
+	let scrollTop = ref(0);
 
 	let list = ref([]);
 	let queryParams = ref({
@@ -51,12 +72,31 @@
 
 	// 生命周期
 	onLoad(async (options) => {
-		console.log('[EmojiIndex] 页面参数:', { title: title.value, type: imageType.value });
+		let query;
+		// #ifdef MP
+		query = $parseURL(options.query);
+		// #endif
+		// #ifndef MP
+		query = JSON.parse(options.query)
+		// #endif
 
-		// 先加载分类数据
+		imageType.value = query.type;
+		// 标题优先用路由传来的，没传就用后台配的类型名
+		title.value = query.title || '';
+
+		// 类型配置要先到位，否则首屏会用兜底布局渲染一次再跳变
+		await imageTypeStore.fetchTypes();
+		if (!title.value) title.value = imageTypeStore.getTypeName(imageType.value);
+
+		console.log('[ImageList] 页面参数:', {
+			title: title.value,
+			type: imageType.value,
+			orientation: imageTypeStore.getOrientation(imageType.value)
+		});
+
 		await categoryStore.fetchCategories();
 
-		// 设置默认选中第一个分类
+		// 默认选中第一个分类
 		if (tabsList.value.length > 0) {
 			currentCategoryId.value = tabsList.value[0].id;
 		}
@@ -64,8 +104,12 @@
 		init();
 	});
 
+	onPageScroll((e) => {
+		scrollTop.value = e.scrollTop;
+	});
+
 	onReachBottom(() => {
-		if(queryParams.value.loadMore) {
+		if (queryParams.value.loadMore) {
 			queryParams.value.pageNum++
 			setTimeout(() => {
 				initList()
@@ -73,15 +117,21 @@
 		}
 	});
 
-	// computed计算属性
+	/**
+	 * 吸顶偏移 = 状态栏高度 + 导航栏 44。
+	 *
+	 * 这里必须给 px，不能给 rpx：u-sticky 内部是 getPx(customNavHeight)，
+	 * 而 getPx 对纯数字一律当 px 处理（带 'rpx' 后缀的字符串才会转换）。
+	 * 原来写的是 pxToRpx(...)，传进去的数值被当成 px，偏移量放大约一倍，
+	 * tab 停在远低于导航栏的位置，中间空出的一条正好露出滚动的图片。
+	 */
 	const customNavHeight = computed(() => {
-		return $mUtil.pxToRpx($u.sys().statusBarHeight + 44)
+		return $u.sys().statusBarHeight + 44
 	});
 
 	// methods方法
 	// tabs切换
 	const handleTabs = (e) => {
-		console.log('[EmojiIndex] 切换分类:', e);
 		currentCategoryId.value = e.id;
 		init();
 	};
@@ -96,19 +146,13 @@
 
 	const initList = async () => {
 		if (!currentCategoryId.value) {
-			console.log('[EmojiIndex] 分类ID为空，跳过加载');
+			console.log('[ImageList] 分类ID为空，跳过加载');
 			return;
 		}
 
 		queryParams.value.loadingType = 1;
 
 		try {
-			console.log('[EmojiIndex] 加载图片列表:', {
-				categoryId: currentCategoryId.value,
-				page: queryParams.value.pageNum,
-				pageSize: queryParams.value.pageSize
-			});
-
 			const res = await getImageList({
 				categoryId: currentCategoryId.value,
 				page: queryParams.value.pageNum,
@@ -118,7 +162,6 @@
 			if (res.code === 0) {
 				const newData = res.data.list || [];
 
-				// 转换数据格式
 				const formattedData = newData.map(img => ({
 					id: img.id,
 					image: img.thumbnailUrl || img.imageUrl,
@@ -141,29 +184,24 @@
 				} else {
 					queryParams.value.loadingType = 0; // 加载完成
 				}
-
-				console.log('[EmojiIndex] 加载成功，当前列表长度:', list.value.length);
 			} else {
-				console.error('[EmojiIndex] 加载失败:', res.message);
-				queryParams.value.loadingType = 3; // 加载失败
+				console.error('[ImageList] 加载失败:', res.message);
+				queryParams.value.loadingType = 3;
 			}
 		} catch (error) {
-			console.error('[EmojiIndex] 加载异常:', error);
-			queryParams.value.loadingType = 3; // 加载失败
+			console.error('[ImageList] 加载异常:', error);
+			queryParams.value.loadingType = 3;
 		}
 	};
 
 	// 点击图片跳转到详情页
 	const handleImageClick = (item) => {
-		console.log('[EmojiIndex] 点击图片:', item);
-		if (item && item.id) {
-			$openPage({
-				name: 'emojiDetails',
-				query: { imageId: item.id }
-			});
-		} else {
-			console.error('[EmojiIndex] 图片数据缺少ID:', item);
+		if (!item || !item.id) {
+			console.error('[ImageList] 图片数据缺少ID:', item);
+			return;
 		}
+		// 详情页只有一个，布局由图片朝向决定；type 传过去只是让它首屏不闪
+		$openPage({ name: 'imageDetail', query: { imageId: item.id, type: imageType.value } });
 	};
 </script>
 

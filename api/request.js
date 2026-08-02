@@ -1,6 +1,7 @@
 import config from '@/config/index.config.js'
 import { keyManager } from '@/util/key-manager.js'
 import { CryptoUtil } from '@/util/crypto.js'
+import { getPlatform } from '@/util/platform.js'
 
 // 不需要加密的路由（仅限密钥交换、登录等必要接口）
 const skipRoutes = [
@@ -12,11 +13,70 @@ const skipRoutes = [
 ]
 
 /**
+ * 正在进行中的静默重登。
+ * 单飞：并发的多个请求同时 401 时只登录一次，其余的等这一次的结果，
+ * 否则会同时发起十几次 wx-login，既浪费也可能触发微信的频率限制。
+ */
+let reloginPromise = null
+
+/**
+ * 静默重新登录。
+ *
+ * 小程序的优势在于 uni.login() 随时能拿到新的 code，全程不需要用户参与，
+ * 所以 token 过期不该是"请重新打开小程序"，而应该自己悄悄换一张。
+ * 这也是为什么不需要把 token 设成永不过期——那样一旦泄露就是永久有效。
+ */
+function silentRelogin() {
+	if (reloginPromise) return reloginPromise
+
+	reloginPromise = (async () => {
+		try {
+			const loginRes = await new Promise((resolve, reject) => {
+				uni.login({ success: resolve, fail: reject })
+			})
+			if (!loginRes || !loginRes.code) {
+				throw new Error('获取登录 code 失败')
+			}
+
+			// 走 request 自己发，wx-login 在 skipRoutes 里不会被加密签名；
+			// 直接 import api/auth.js 会和本文件形成循环引用
+			const res = await request({
+				url: '/auth/wx-login',
+				method: 'POST',
+				data: {
+					code: loginRes.code,
+					nickname: '',
+					avatarUrl: '',
+					platform: getPlatform(),
+					inviteCode: ''
+				}
+			})
+
+			if (!res || res.code !== 0 || !res.data || !res.data.accessToken) {
+				throw new Error((res && res.message) || '登录失败')
+			}
+
+			uni.setStorageSync('token', res.data.accessToken)
+			if (res.data.userInfo) {
+				uni.setStorageSync('userInfo', JSON.stringify(res.data.userInfo))
+			}
+			console.log('[Auth] 静默重新登录成功')
+			return res.data.accessToken
+		} finally {
+			// 无论成败都要释放，否则失败一次之后再也不会重试
+			reloginPromise = null
+		}
+	})()
+
+	return reloginPromise
+}
+
+/**
  * 封装的请求方法（支持加密通信）
  * @param {Object} options 请求选项
- * @param {boolean} isRetry 是否为重试请求（内部使用）
+ * @param {Object} retried 内部重试标记 { key: 密钥已重试过, auth: 已重登过 }
  */
-async function request(options, isRetry = false) {
+async function request(options, retried = {}) {
 	const url = options.url || ''
 	const needEncrypt = !skipRoutes.some(route => url.includes(route))
 
@@ -120,29 +180,49 @@ async function request(options, isRetry = false) {
 			data: requestData,
 			header: headers,
 			success: (res) => {
-				// 处理 401 未授权错误 (token 失效)
+				// 处理 401 未授权 (token 失效)：静默重新登录后自动重试原请求，
+				// 用户无感。原来是清空登录态 + 提示"请重新打开小程序"，
+				// 而小程序随时能拿到新 code，完全没必要把这个负担丢给用户。
 				if (res.statusCode === 401) {
-					console.warn('[Response] Token 失效，清除本地数据并触发重新登录')
-					// 清除 token
-					uni.removeStorageSync('token')
-					uni.removeStorageSync('userInfo')
-					// 清除密钥
-					uni.removeStorageSync('__client_id__')
-					uni.removeStorageSync('__aes_key__')
-					keyManager.clearKeys()
-					uni.showToast({
-						title: '登录已失效，请重新打开小程序',
-						icon: 'none',
-						duration: 3000
-					})
-					reject(new Error('未授权访问'))
+					// 登录接口自己 401 就别再套娃了
+					if (retried.auth || url.includes('/auth/wx-login')) {
+						console.error('[Response] 重新登录后仍然 401，放弃')
+						uni.removeStorageSync('token')
+						uni.removeStorageSync('userInfo')
+						uni.showToast({ title: '登录失败，请稍后重试', icon: 'none' })
+						reject(new Error('未授权访问'))
+						return
+					}
+
+					// 本次请求用的 token 已经被别的请求换掉了，说明刚刚有人登过，
+					// 直接拿新 token 重试即可，不用再登一次。
+					// 没有这一步的话：一批请求带着旧 token 发出去，响应陆续回来，
+					// 每个 401 都会各自触发一次登录（单飞只挡得住同时在飞的那些）。
+					const latestToken = uni.getStorageSync('token')
+					if (latestToken && latestToken !== token) {
+						console.log('[Response] token 已被刷新，直接重试:', url)
+						request(options, { ...retried, auth: true }).then(resolve).catch(reject)
+						return
+					}
+
+					console.warn('[Response] Token 失效，静默重新登录后重试:', url)
+					silentRelogin()
+						.then(() => request(options, { ...retried, auth: true }))
+						.then(resolve)
+						.catch((error) => {
+							console.error('[Response] 静默重新登录失败:', error)
+							uni.removeStorageSync('token')
+							uni.removeStorageSync('userInfo')
+							uni.showToast({ title: '登录失败，请稍后重试', icon: 'none' })
+							reject(error)
+						})
 					return
 				}
 
 				// 处理 428 密钥过期错误
 				if (res.statusCode === 428 || res.data?.needKeyExchange) {
 					// 防止无限重试
-					if (isRetry) {
+					if (retried.key) {
 						console.error('[Response] 重试后仍然密钥过期，放弃请求')
 						reject(new Error('密钥交换失败'))
 						return
@@ -155,7 +235,7 @@ async function request(options, isRetry = false) {
 					keyManager.exchangeKey()
 						.then(() => {
 							console.log('[Response] 密钥已更新，自动重试原请求:', url)
-							return request(options, true) // 标记为重试请求
+							return request(options, { ...retried, key: true })
 						})
 						.then(resolve)
 						.catch(reject)
@@ -194,19 +274,35 @@ async function request(options, isRetry = false) {
 					resolve(responseData)
 				} else {
 					console.error(`[Response] ${url} - 请求失败:`, res.statusCode, res.data)
-					uni.showToast({
-						title: '请求失败',
-						icon: 'none'
-					})
-					reject(res)
+
+					/**
+					 * 抛出带 message 的 Error，而不是原始响应对象。
+					 *
+					 * 原来 reject(res) 抛的是 uni.request 的响应对象，上面没有 message 属性，
+					 * 调用方普遍写的是 `error.message || '默认文案'`，于是后端返回的
+					 * "该图片为VIP专属,请先购买VIP" 全都被吞掉，用户只看到"下载失败"。
+					 *
+					 * 这里也不再弹通用 toast：
+					 * 1. 12 处调用方本来就会用 error.message 自行提示，会重复弹两次
+					 * 2. showToast 会顶掉正在显示的 showLoading，
+					 *    控制台那句"showLoading 与 hideLoading 必须配对使用"就是这么来的
+					 */
+					const message =
+						(res.data && (res.data.message || res.data.error)) ||
+						`请求失败(${res.statusCode})`
+					const error = new Error(message)
+					error.statusCode = res.statusCode
+					error.data = res.data
+					reject(error)
 				}
 			},
 			fail: (err) => {
-				uni.showToast({
-					title: '网络错误',
-					icon: 'none'
-				})
-				reject(err)
+				// 同样抛 Error 而不是 uni 的原始对象，并且不在这里弹提示
+				console.error(`[Response] ${url} - 网络错误:`, err)
+				const error = new Error('网络错误，请检查网络后重试')
+				error.isNetworkError = true
+				error.raw = err
+				reject(error)
 			}
 		})
 	})

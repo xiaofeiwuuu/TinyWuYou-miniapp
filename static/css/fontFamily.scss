@@ -1,9 +1,35 @@
+/**
+ * 自定义字体 fontAgile。
+ *
+ * 原来 MP 分支指向 https://env-00jxtb4yakpd.normal.cloudstatic.cn/...，
+ * 这个微信云托管域名已经注销（DNS 查询返回 NXDOMAIN），每次启动都会报
+ * "Failed to load font ... ERR_NAME_NOT_RESOLVED"；
+ * 而非 MP 分支引用的 static/css/simplified.ttf 在仓库里也不存在。
+ * 也就是说这个字体两端都加载不到，留着只会刷错误日志。
+ *
+ * 所以暂时不声明 @font-face，改用下面的 $font-agile 变量统一出口，
+ * 任何地方都带系统字体兜底，字体缺失时正常回落，不影响文字渲染。
+ *
+ * 要恢复自定义字体：小程序的 CSS 不能引用本地 ttf，必须是网络地址或 base64。
+ * 把字体文件放到自己的服务器（比如 nginx 静态目录）后，
+ * 打开下面的 @font-face 并填上真实地址即可。
+ */
+
+/*
 @font-face {
-    font-family: fontAgile;
-	/* #ifndef MP */
+	font-family: fontAgile;
+	// #ifndef MP
 	src: url('~@/static/css/simplified.ttf');
-	/* #endif */
-	/* #ifdef MP */
-	src: url('https://env-00jxtb4yakpd.normal.cloudstatic.cn/fontFamily/simplified.ttf');
-	/* #endif */
+	// #endif
+	// #ifdef MP
+	src: url('https://你的域名/fontFamily/simplified.ttf');
+	// #endif
+	// 字体没下来时先用兜底字体渲染，不要出现空白期
+	font-display: swap;
 }
+*/
+
+/**
+ * 带兜底的字体栈定义在 uni.scss 里的 $font-agile
+ * （uni.scss 会被自动注入每个组件，不用逐个 import），各处直接用它。
+ */

@@ -22,12 +22,14 @@
 </template>
 
 <script setup>
-	import { getCurrentInstance, ref } from 'vue';
+	import { getCurrentInstance, ref, computed } from 'vue';
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	import { getCollections } from '@/api/user.js';
+	import { useImageTypeStore } from '@/stores/imageType.js';
 
 	// data数据
 	const { $mUtil, $openPage, $mConstDataConfig } = getCurrentInstance().appContext.config.globalProperties;
+	const imageTypeStore = useImageTypeStore();
 	let list = ref([]);
 	let currentImageType = ref(''); // 当前选中的图片类型,空字符串表示全部
 	let queryParams = ref({
@@ -37,18 +39,22 @@
 		loadMore: true
 	});
 
-	// 图片类型 Tabs (根据数据库定义的所有图片类型)
-	const imageTypeTabs = ref([
+	/**
+	 * 图片类型 Tabs，从后端配置读取。
+	 *
+	 * 原来是写死的六项，有两个问题：
+	 * 1. 名字和后台配置对不上（这里叫「PC壁纸」「表情」，后台是「平板/电脑壁纸」「表情包」）
+	 * 2. 后台新增类型时这里不会出现，收藏了也筛不出来
+	 */
+	const imageTypeTabs = computed(() => [
 		{ id: '', name: '全部' },
-		{ id: 'avatar', name: '头像' },
-		{ id: 'wallpaper', name: '手机壁纸' },
-		{ id: 'pc_wallpaper', name: 'PC壁纸' },
-		{ id: 'emoji', name: '表情' },
-		{ id: 'sticker', name: '贴纸' }
+		...imageTypeStore.types.map((t) => ({ id: t.code, name: t.name }))
 	]);
 
 	// 生命周期
-	onLoad(() => {
+	onLoad(async () => {
+		// 类型配置要先到位，否则 tabs 是空的
+		await imageTypeStore.fetchTypes()
 		init()
 	});
 
@@ -135,22 +141,15 @@
 	const onClick = (item) => {
 		if (!item || !item.id) return;
 
-		console.log('[Collect] 点击图片:', item);
-
-		// 根据图片类型跳转到不同详情页
-		const detailPageMap = {
-			'avatar': 'avatarDetails',
-			'wallpaper': 'mobileDetails',
-			'pc_wallpaper': 'mobileDetails', // PC壁纸也用壁纸详情页
-			'emoji': 'mobileDetails', // 表情暂时用壁纸详情页
-			'sticker': 'mobileDetails' // 贴纸暂时用壁纸详情页
-		};
-
-		const pageToOpen = detailPageMap[item.imageType] || 'mobileDetails';
-
+		/**
+		 * 详情页只有一个，布局由图片自己的朝向决定。
+		 *
+		 * 原来这里有一张映射表，把 pc_wallpaper / emoji / sticker 全指向了
+		 * 竖图的整屏壁纸详情页（注释写着"暂时用"），横图被拉满屏、方图没有推荐位。
+		 */
 		$openPage({
-			name: pageToOpen,
-			query: { imageId: item.id }
+			name: 'imageDetail',
+			query: { imageId: item.id, type: item.imageType }
 		});
 	};
 </script>

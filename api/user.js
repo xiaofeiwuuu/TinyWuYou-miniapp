@@ -11,6 +11,24 @@ export function getUserProfile() {
 }
 
 /**
+ * 修改个人资料
+ *
+ * 头像传的是"已收藏图片的 ID"而不是 URL：后端只认收藏里的图，
+ * 不开放上传，也不接受外链地址。
+ *
+ * @param {Object} data
+ * @param {string} [data.nickname]      新昵称，1-20 字
+ * @param {number} [data.avatarImageId] 用作头像的图片 ID，必须已收藏
+ */
+export function updateUserProfile(data) {
+	return request({
+		url: '/user/profile',
+		method: 'PUT',
+		data
+	})
+}
+
+/**
  * 收藏图片
  * @param {number} imageId - 图片ID
  */

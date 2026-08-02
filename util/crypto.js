@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js'
-import forge from 'node-forge'
+import { rsaOaepEncrypt } from './rsa-oaep.js'
 
 /**
  * 前端加密工具类
@@ -14,22 +14,44 @@ export class CryptoUtil {
 	 * 会直接抛 "RSA_PKCS1_PADDING is no longer supported for private decryption"）——
 	 * 也就是说小程序此前根本无法完成密钥交换。
 	 *
-	 * 换成 node-forge 的 OAEP-SHA256，与服务端 crypto.privateDecrypt 的
+	 * 改用 OAEP-SHA256，与服务端 crypto.privateDecrypt 的
 	 * RSA_PKCS1_OAEP_PADDING + oaepHash:'sha256' 完全对应。
 	 * OAEP 本身也不存在 PKCS1v1.5 的填充预言问题。
+	 *
+	 * 实现走自带的 util/rsa-oaep.js 而不是 node-forge：forge 在模块初始化时
+	 * 会读 globalScope.crypto，小程序里 self/window 都不存在，会在
+	 * vendor 分包加载阶段直接抛 "Cannot read property 'crypto' of undefined"，
+	 * 整个小程序起不来。详见 rsa-oaep.js 顶部说明。
 	 */
 	static rsaEncrypt(data, publicKey) {
 		try {
-			const pubKey = forge.pki.publicKeyFromPem(publicKey)
-			const encrypted = pubKey.encrypt(data, 'RSA-OAEP', {
-				md: forge.md.sha256.create(),
-				mgf1: { md: forge.md.sha256.create() }
-			})
-			return forge.util.encode64(encrypted)
+			return rsaOaepEncrypt(data, publicKey, this.deriveOaepSeed(data))
 		} catch (error) {
 			console.error('[CryptoUtil] RSA 加密失败:', error)
 			throw error
 		}
+	}
+
+	/** OAEP 种子计数器，保证同一会话内不重复 */
+	static seedCounter = 0
+
+	/**
+	 * 派生 OAEP 的 32 字节种子。
+	 *
+	 * 小程序没有 CSPRNG，Math.random 不能用来做加密材料。
+	 * 这里用 HMAC(明文, 时间戳:计数器:本机熵) 派生——明文本身就是刚生成的
+	 * AES 密钥（含服务端随机数，攻击者不可知），所以派生出的种子对攻击者
+	 * 同样不可预测；计数器保证不重复。思路与 deriveIv 一致。
+	 */
+	static deriveOaepSeed(secret) {
+		this.seedCounter = (this.seedCounter + 1) % Number.MAX_SAFE_INTEGER
+		const material = `oaep-seed:${Date.now()}:${this.seedCounter}:${this.collectLocalEntropy()}`
+		const digest = CryptoJS.HmacSHA256(material, CryptoJS.enc.Utf8.parse(secret))
+		const bytes = new Uint8Array(32)
+		for (let i = 0; i < 32; i++) {
+			bytes[i] = (digest.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff
+		}
+		return bytes
 	}
 
 	/**

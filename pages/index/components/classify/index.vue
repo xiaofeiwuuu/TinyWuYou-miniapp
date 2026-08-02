@@ -1,7 +1,11 @@
 <template>
 	<view class="fu-p-b-80 fu-m-30">
-		<!-- 文案分类 -->
-		<jc-section title="文案分类" margin="30rpx 0" :showRight="false" size="36" />
+		<!--
+			标题字号用 jc-section 的默认值（22 → 44rpx ≈ 22px），和首页各区块保持一致。
+			原来写死 size="36"：uview-plus 的 unit 配成了 rpx，addUnit 对 rpx 会再乘 2，
+			所以 36 实际渲染成 72rpx（≈36px），比全站其它标题大了 64%。
+		-->
+		<jc-section title="文案分类" margin="30rpx 0" :showRight="false" />
 		<view class="fu-m-t-20">
 			<jc-grid :list="textList" :column="2" multiple="0.5" @click="handleTextClick">
 				<template v-slot:default="scope">

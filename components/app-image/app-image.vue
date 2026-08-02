@@ -1,31 +1,50 @@
 <template>
-	<up-transition mode="fade" :show="show" :duration="fade? duration : 0" :customStyle="wrapStyle" v-if="show">
-		<view class="app-image" :class="[`app-image--${elId}`]" :style="[wrapStyle, backgroundStyle]" @tap="onClick">
-			<image
-				class="app-image__image"
-				:src="src"
-				:mode="mode"
-				@error="onErrorHandler"
-				@load="onLoadHandler"
-				:show-menu-by-longpress="showMenuByLongpress"
-				:lazy-load="lazyLoad"
-				:style="[imageStyle]"
-				v-if="!isError && observeShow"></image>
-			<view v-if="showLoading && loading" class="app-image__loading"
-				:style="{borderRadius: shape == 'circle' ? '50%' : addUnit(radius), backgroundColor: bgColor}">
-				<slot name="loading">
-					<up-icon :name="loadingIcon" size="20" color="#999999"></up-icon>
-				</slot>
-			</view>
-			<view v-if="showError && isError && !loading" class="app-image__error"
-				:style="{borderRadius: shape == 'circle' ? '10000px' : addUnit(radius)}">
-				<slot name="error">
-					<up-icon :name="errorIcon" size="20" color="#999999"></up-icon>
-				</slot>
-			</view>
-			<view class="app-image__inner" :style="[wrapStyle]" v-if="dim"></view>
+	<!--
+		根节点必须始终存在，不能挂 v-if。
+		原来外层是 <up-transition v-if="show">，而 show 要等 mounted() 才置 true，
+		意味着首次渲染这个组件什么都不输出；再叠加 MP-WEIXIN 的 virtualHost，
+		图片加载失败时又把 <image> 整个移除、换成错误占位，
+		节点在渲染层被大量增删，就会出现
+		"insertTextView:fail parent xxx not found" 直至整页渲染不出来。
+		现在改成：结构固定，加载状态只驱动样式，不增删节点。
+		淡入用 wrapStyle 里已有的 opacity + transition 完成，不再需要 up-transition。
+	-->
+	<view class="app-image" :class="[`app-image--${elId}`]" :style="[wrapStyle, backgroundStyle]" @tap="onClick">
+		<image
+			v-if="observeShow && src"
+			class="app-image__image"
+			:src="src"
+			:mode="mode"
+			@error="onErrorHandler"
+			@load="onLoadHandler"
+			:show-menu-by-longpress="showMenuByLongpress"
+			:lazy-load="lazyLoad"
+			:style="[imageStyle, { opacity: isError ? 0 : 1 }]"></image>
+
+		<!-- 加载中占位 -->
+		<view v-if="showLoading && loading && !isError" class="app-image__loading"
+			:style="{borderRadius: shape == 'circle' ? '50%' : addUnit(radius), backgroundColor: bgColor}">
+			<slot name="loading">
+				<up-icon :name="loadingIcon" size="20" color="#999999"></up-icon>
+			</slot>
 		</view>
-	</up-transition>
+
+		<!-- 失败占位：优先用占位图，没有配置才退回图标 -->
+		<view v-if="showError && isError" class="app-image__error"
+			:style="{borderRadius: shape == 'circle' ? '10000px' : addUnit(radius)}">
+			<slot name="error">
+				<image
+					v-if="errorSrc"
+					class="app-image__error-img"
+					:src="errorSrc"
+					mode="aspectFill"
+					:style="{borderRadius: shape == 'circle' ? '10000px' : addUnit(radius)}"></image>
+				<up-icon v-else :name="errorIcon" size="20" color="#999999"></up-icon>
+			</slot>
+		</view>
+
+		<view class="app-image__inner" :style="[wrapStyle]" v-if="dim"></view>
+	</view>
 </template>
 
 <script>
@@ -52,14 +71,13 @@
 				isError: false,
 				// 初始化组件时，默认为加载中状态
 				loading: true,
-				// 不透明度，为了实现淡入淡出的效果
-				opacity: 1,
+				// 不透明度，为了实现淡入淡出的效果。
+				// 开了 fade 就从 0 开始，mounted 后置 1 触发 CSS 过渡
+				opacity: this.fade ? 0 : 1,
 				// 过渡时间，因为props的值无法修改，故需要一个中间值
 				durationTime: this.duration,
 				// 图片加载完成时，去掉背景颜色，因为如果是png图片，就会显示灰色的背景
 				backgroundStyle: {},
-				// 用于fade模式的控制组件显示与否
-				show: false,
 				// 是否开启图片出现在可视范围进行加载（另一种懒加载）
 				observeShow: !this.observeLazyLoad,
 				observerName: 'contentObserver',
@@ -74,13 +92,16 @@
 			src: {
 				immediate: true,
 				handler(n) {
-					if (!n) {
-						// 如果传入null或者''，或者false，或者undefined，标记为错误状态
-						this.isError = true
-					} else {
-						this.isError = false;
-						this.loading = true;
-					}
+					/**
+					 * 空 src 是"地址还没拿到"，不是"加载失败"。
+					 *
+					 * 原来一律置 isError=true，于是详情页从打开到 /image/:id 返回的
+					 * 那一两秒里显示的是灰底 + error-circle 报错图标，
+					 * 看上去像图挂了——用户以为没点上，就会退出去重新点。
+					 * 现在归到加载中（photo 图标），有地址了再切正常流程。
+					 */
+					this.isError = false;
+					this.loading = true;
 				}
 			}
 		},
@@ -115,9 +136,10 @@
 			}
 		},
 		mounted() {
-			this.show = true;
-			this.$nextTick(()=>{
-				if(this.observeLazyLoad) this.observerFn();
+			this.$nextTick(() => {
+				// 下一帧再置 1，让 CSS 过渡真正跑起来（首帧就是 1 的话不会有淡入）
+				this.opacity = 1;
+				if (this.observeLazyLoad) this.observerFn();
 			})
 		},
 		methods: {
@@ -219,6 +241,13 @@
 			background-color: $app-image-error-background-color;
 			color: $app-image-error-color;
 			font-size: $app-image-error-font-size;
+		}
+
+		/* 自定义占位图铺满容器 */
+		&__error-img {
+			width: 100%;
+			height: 100%;
+			display: block;
 		}
 
 		&__inner {

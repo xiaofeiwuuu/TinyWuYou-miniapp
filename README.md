@@ -27,6 +27,10 @@
 - **批量操作**:支持批量下载和管理
 - **图片预览**:高清图片预览体验
 
+## 技术栈
+
+uni-app · Vue 3 · Vite · Pinia · uview-plus
+
 ## 技术特点
 
 - 基于 uni-app 框架开发,代码复用性高
@@ -34,6 +38,7 @@
 - 响应式设计,适配不同屏幕尺寸
 - 图片懒加载,优化加载性能
 - 瀑布流布局,展示效果更佳
+- 请求全程 RSA + AES 混合加密并带签名防重放,token 失效自动静默重登
 
 ## 开发环境
 
@@ -43,30 +48,56 @@
 
 ## 快速开始
 
+本项目是 **HBuilderX 工程**，编译由 IDE 完成，`package.json` 里没有 `dev` / `build` 脚本。
+
 ```bash
-# 安装依赖
+# 只需安装依赖（供 IDE 和编辑器解析）
 pnpm install
-
-# 运行开发环境
-pnpm dev:mp-weixin
-
-# 构建生产版本
-pnpm build:mp-weixin
 ```
+
+然后用 HBuilderX 打开项目：
+
+1. 运行 → 运行到小程序模拟器 → 微信开发者工具
+2. 发行 → 小程序-微信 → 生成正式包再上传
+
+> 注意：运行模式的产物未压缩且带 sourcemap，体积偏大，正式发布必须走「发行」。
 
 ## 项目结构
 
 ```
 mirage/
-├── pages/              # 页面文件
-├── packWallpaper/      # 分包 - 壁纸相关页面
-├── packAvatar/         # 分包 - 头像相关页面
-├── packEmoji/          # 分包 - 表情包相关页面
-├── packSticker/        # 分包 - 贴纸相关页面
-├── static/             # 静态资源
-├── utils/              # 工具函数
+├── pages/index/        # 主包，只有 1 个页面：四个 tab 的容器
+│   └── components/     # 四个 tab 的内容组件（index/classify/find/user）
+├── packWallpaper/      # 分包 - 壁纸/头像/表情包/贴纸/文案，18 个页面
+│   └── api/            # 仅本分包使用的接口（image / text）
+├── packUser/           # 分包 - 收藏、下载、卡密兑换，3 个页面
+│   └── api/            # 仅本分包使用的接口（vip）
+├── packPublic/         # 分包 - 关于我们、反馈、常见问题，4 个页面
+├── api/                # 主包共用接口：request 封装、auth、user、category、task、ad
+├── components/         # app-* 基础组件（移植自 uview-plus）
+│                       # jc-*  业务组件（基于 app-* 组合而成）
+├── stores/             # Pinia：user / category / ad
+├── config/             # 静态资源路径、常量、接口地址
+├── util/               # crypto、key-manager、router、platform 等工具
+├── static/             # 图片与样式
+├── pages.json          # 页面与分包注册
 └── manifest.json       # 应用配置
 ```
+
+### 为什么有三个 api 目录
+
+微信小程序**主包有 2MB 体积限制**，分包各自独立计算。只被某个分包用到的接口文件放进该分包，就不会占用主包配额。
+
+因此规则是：
+
+- **只有一个分包用** → 放进该分包的 `api/`
+- **主包或多个分包都要用** → 放根目录 `api/`
+
+`api/request.js`（含加密、签名、静默重登）属于后者，所有分包都从根目录引用它。改动接口文件位置前，先确认调用方是否跨包。
+
+## 后期计划
+
+- AI 制作
 
 ## 许可证
 

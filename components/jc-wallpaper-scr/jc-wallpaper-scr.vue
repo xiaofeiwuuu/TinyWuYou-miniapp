@@ -9,12 +9,17 @@
 					@click="$emit('click', item)"
 				>
 					<view class="fu-relative" :style="{marginRight: index + 1 < displayList.length? `${props.gutter}px`: `${$u.addUnit(props.margin)}`}">
+						<!--
+							没有图时留空，交给 app-image 自己的占位逻辑，
+							不要拿 picsum.photos 顶上：那是外部域名，不在小程序合法域名白名单里，
+							真机上必然加载失败，结果是"本想显示占位图，最后显示的是加载失败"。
+						-->
 						<app-image
 							:width="width"
 							:height="height"
 							bgColor="#222222"
 							:radius="radius"
-							:src="item.thumbnailUrl || item.imageUrl || `https://picsum.photos/200/200?${index}`"
+							:src="item.thumbnailUrl || item.imageUrl || ''"
 						></app-image>
 						<slot :data="item" />
 					</view>

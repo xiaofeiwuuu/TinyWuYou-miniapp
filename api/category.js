@@ -1,6 +1,20 @@
 import request from './request.js'
 
 /**
+ * 获取启用中的图片类型（含朝向）。
+ *
+ * 朝向 orientation 决定列表用什么布局：
+ * portrait 竖图 / landscape 横图 / square 方图。
+ * 后台在「内容管理 → 图片类型」里配置，小程序不需要发版。
+ */
+export function getImageTypes() {
+	return request({
+		url: '/image/types',
+		method: 'GET'
+	})
+}
+
+/**
  * 获取图片分类列表 (头像/壁纸)
  */
 export function getImageCategories() {

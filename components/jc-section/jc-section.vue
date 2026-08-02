@@ -4,12 +4,11 @@
 			<view :class="{'custom-family': family}">
 				<up-text :text="props.title" color="#FFFFFF" :size="props.size"></up-text>
 			</view>
-			<up-text :text="props.desc" color="#555555" :size="props.descSize"></up-text>
 		</view>
 		<slot>
-			<up-button color="#333333" shape="round" :customStyle="{height: '40rpx', padding: '0 20rpx', width: 'auto'}" @click="$emit('click')" v-if="showRight">
-				<text class="fu-m-r-5" style="color: #999999; font-size: 28rpx;">更多</text>
-				<text class="fu-m-t-4" style="color: #999999; font-size: 28rpx;">+</text>
+			<up-button color="#333333" shape="round" :customStyle="{height: '44rpx', padding: '0 20rpx', width: 'auto'}" @click="$emit('click')" v-if="showRight">
+				<text class="fu-m-r-4" style="color: #999999; font-size: 24rpx;">更多</text>
+				<up-icon name="arrow-right" color="#999999" size="11"></up-icon>
 			</up-button>
 		</slot>
 	</view>
@@ -25,10 +24,6 @@
 			type: String,
 			default: ''
 		},
-		desc: {
-			type: String,
-			default: ''
-		},
 		showRight: {
 			type: Boolean,
 			default: true
@@ -37,13 +32,11 @@
 			type: String,
 			default: '0 30rpx'
 		},
+		// 注意 main.js 把 uview-plus 的 unit 设成了 rpx，而 addUnit 对 rpx 会再乘 2，
+		// 所以这里填 22 实际是 44rpx（≈22px），数值本身按 px 的直觉来估就行
 		size: {
 			type: [Number,String],
-			default: 44
-		},
-		descSize: {
-			type: [Number,String],
-			default: 24
+			default: 22
 		},
 		family: {
 			type: Boolean,
@@ -55,6 +48,6 @@
 
 <style lang="scss" scoped>
 	.custom-family {
-		font-family: fontAgile !important;
+		font-family: $font-agile !important;
 	}
 </style>

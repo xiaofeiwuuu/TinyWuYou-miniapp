@@ -1,6 +1,7 @@
 <script>
 	import { wxLogin } from '@/api/auth.js'
 	import { useUserStore } from '@/stores/user.js'
+	import { getPlatform } from '@/util/platform.js'
 
 	export default {
 		globalData: {
@@ -63,20 +64,8 @@
 						return
 					}
 
-					// 获取平台标识
-					let platform = 'weixin'
-					// #ifdef MP-WEIXIN
-					platform = 'weixin'
-					// #endif
-					// #ifdef MP-XHS
-					platform = 'xiaohongshu'
-					// #endif
-					// #ifdef MP-DOUYIN
-					platform = 'douyin'
-					// #endif
-					// #ifdef MP-ALIPAY
-					platform = 'alipay'
-					// #endif
+					// 平台标识与 request.js 的静默重登共用同一份判断
+					const platform = getPlatform()
 
 					// 调用小程序登录获取 code
 					const loginRes = await new Promise((resolve, reject) => {
@@ -153,7 +142,7 @@
 	}
 
 	.font-family {
-		font-family: fontAgile;
+		font-family: $font-agile;
 	}
 
 	:deep(.app-nav-bar-text) {

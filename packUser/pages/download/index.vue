@@ -3,7 +3,7 @@
 		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" title="我的下载" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 	
 		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
-			<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />
+			<jc-grid :list="list" @click="onClick($event)" />
 			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view>
 	</page-layout>
@@ -14,7 +14,7 @@
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	
 	// data数据
-	const { $mUtil, $mAssetsPath, $mConstDataConfig } = getCurrentInstance().appContext.config.globalProperties;
+	const { $mUtil, $mAssetsPath, $mConstDataConfig, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 	let list = ref([]);
 	let queryParams = ref({
 		pageNum: 1,
@@ -38,6 +38,19 @@
 	});
 	
 	// methods
+	/**
+	 * 模板里一直在调 onClick，但这个函数从来没有定义过——
+	 * 点任何一张图都会直接抛 "onClick is not a function"。
+	 *
+	 * 注意：这个页面的列表还是模板自带的假数据（$mAssetsPath.mobile 等本地图），
+	 * 没有 id，所以补上这个函数只是让它不再报错，下载历史本身还没接后端。
+	 */
+	const onClick = (item) => {
+		if(!item || !item.id) return console.error('[Download] 图片缺少 ID:', item)
+		// 详情页只有一个，布局由图片自己的 imageType 决定
+		$openPage({name: 'imageDetail', query: { imageId: item.id, type: item.imageType }})
+	};
+
 	const init = () => {
 		queryParams.value.pageNum = 1;
 		list.value = [];

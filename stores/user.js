@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getUserProfile } from '@/api/user.js'
+import $mAssetsPath from '@/config/assets.config.js'
 
 /**
  * 用户信息 Store
@@ -41,8 +42,9 @@ export const useUserStore = defineStore('user', () => {
 				const parsed = JSON.parse(cachedUserInfo)
 				userInfo.value = {
 					id: parsed.id || '',
+					uid: parsed.uid || '',
 					nickname: parsed.nickname || '微信用户',
-					avatarUrl: parsed.avatarUrl || 'https://picsum.photos/200/200',
+					avatarUrl: parsed.avatarUrl || $mAssetsPath.defaultAvatar,
 					downloadCount: parsed.downloadCount || 0,
 					userLevel: parsed.userLevel || 1,
 					isVip: parsed.isVip || 0,
@@ -89,8 +91,11 @@ export const useUserStore = defineStore('user', () => {
 				// 更新store
 				userInfo.value = {
 					id: res.data.id || '',
+					// 对外展示的 8 位标识，个人中心要显示也要复制。
+					// 之前这里没映射，页面上"Uid："后面永远是空的
+					uid: res.data.uid || '',
 					nickname: res.data.nickname || '微信用户',
-					avatarUrl: res.data.avatarUrl || 'https://picsum.photos/200/200',
+					avatarUrl: res.data.avatarUrl || $mAssetsPath.defaultAvatar,
 					downloadCount: res.data.downloadCount || 0,
 					userLevel: res.data.userLevel || 1,
 					isVip: res.data.isVip || 0,

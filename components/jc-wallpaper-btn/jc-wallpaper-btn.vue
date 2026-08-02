@@ -10,7 +10,8 @@
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('download')" @click="onClick('download')">
-				<up-icon name="download" :color="iconColor" :size="iconSize + 6"></up-icon>
+				<!-- 尺寸与其余图标保持一致，原来是 iconSize + 6，比旁边大一圈 -->
+				<up-icon name="download" :color="iconColor" :size="iconSize"></up-icon>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('index')" @click="onClick('index')">
@@ -18,7 +19,15 @@
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('collect')" @click="onClick('collect')">
-				<up-icon :name="isCollect? 'star-fill': 'star'" :color="isCollect? '#FF725D': iconColor" :size="iconSize"></up-icon>
+				<!--
+					收藏图标单独包一层来做动画：
+					up-icon 的根节点样式由组件自己控制，动画类挂在外层才不会被它覆盖。
+					collect-icon--on 是常驻的放大态（收藏后比未收藏略大一点，状态更明显），
+					collect-icon--pop 是收藏成功那一下的弹跳，播完由 transitionend 之外的定时器摘掉。
+				-->
+				<view class="collect-icon" :class="{ 'collect-icon--on': isCollect, 'collect-icon--pop': collectPop }">
+					<up-icon :name="isCollect? 'star-fill': 'star'" :color="isCollect? '#FF725D': iconColor" :size="iconSize"></up-icon>
+				</view>
 			</button>
 			
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('share')" @click="onClick('share')">
@@ -29,7 +38,7 @@
 </template>
 
 <script setup>
-	import { ref, getCurrentInstance, watch } from 'vue';
+	import { ref, reactive, getCurrentInstance, watch, onUnmounted } from 'vue';
 	import { collectImage, uncollectImage, downloadImage } from '@/api/user.js';
 	import { useUserStore } from '@/stores/user.js';
 	import { useAdStore } from '@/stores/ad.js';
@@ -95,7 +104,81 @@
 	watch(() => props.isCollected, (newVal) => {
 		isCollect.value = newVal;
 	});
-	
+
+	/**
+	 * 动作防重入。
+	 *
+	 * 收藏和下载"点下去到结果返回"都有几百毫秒空档，用户会以为没点上而连点，
+	 * 而这两个后端接口都不是幂等的：
+	 *   收藏  重复提交直接 400「已收藏过该图片」，用户看到的是一次"成功"加一次"报错"
+	 *   下载  每调一次就扣一次下载次数（download_count - 1），连点几下白扣几次
+	 *
+	 * 挡住重复提交的是这把锁，不是遮罩——所以遮罩是纯粹的"还在忙"提示，可以按需要开关。
+	 */
+	const pending = reactive({});
+
+	/** 超过这个时间还没完成才弹遮罩，避免快操作闪一下反而更难受 */
+	const LOADING_DELAY = 200;
+
+	/** 收藏成功那一下的弹跳 */
+	let collectPop = ref(false);
+	let popTimer = null;
+
+	const playCollectAnim = () => {
+		// 先摘类再挂类，中间隔一帧，否则连续收藏第二次时 CSS 动画不会重播
+		clearTimeout(popTimer);
+		collectPop.value = false;
+		popTimer = setTimeout(() => {
+			collectPop.value = true;
+			popTimer = setTimeout(() => { collectPop.value = false }, 400);
+		}, 20);
+	};
+
+	// 组件销毁时清掉定时器，避免在已卸载的组件上改响应式状态
+	onUnmounted(() => clearTimeout(popTimer));
+
+	/**
+	 * 跑一个互斥动作。
+	 *
+	 * @param key     动作标识，同一个 key 在完成前的重复点击会被忽略
+	 * @param task    实际任务。不要自己弹提示，把提示文案 return 出来——
+	 *                uni.showToast 会顶掉正在显示的 showLoading，
+	 *                若在 task 内部弹，之后的 hideLoading 就成了没配对的调用，
+	 *                控制台会刷"showLoading 与 hideLoading 必须配对使用"。
+	 * @param loading { title } 才显示遮罩；不传就完全不显示。
+	 *                乐观更新的动作（比如收藏，点下去图标立刻就变了）不要遮罩：
+	 *                结果都已经摆在眼前了，再盖一层"加载中"等于收回刚给出的确定感，
+	 *                还会挡住用户的下一步操作。
+	 */
+	const runExclusive = async (key, task, loading = null) => {
+		if (pending[key]) {
+			console.warn('[Wallpaper Btn] 上一次操作还没完成，忽略本次:', key);
+			return;
+		}
+		pending[key] = true;
+
+		let loadingShown = false;
+		const timer = loading
+			? setTimeout(() => {
+				loadingShown = true;
+				uni.showLoading({ title: loading.title, mask: true });
+			}, loading.delay || LOADING_DELAY)
+			: null;
+
+		let tip = '';
+		try {
+			tip = (await task()) || '';
+		} finally {
+			if (timer) clearTimeout(timer);
+			// 只有真的显示过才关，否则同样会触发配对警告
+			if (loadingShown) uni.hideLoading();
+			pending[key] = false;
+		}
+
+		if (tip) $u.toast(tip);
+		return tip;
+	};
+
 	// methods方法
 	/**
 	 * @description onClick方法
@@ -139,22 +222,33 @@
 			return
 		}
 
-		try {
-			if (isCollect.value) {
-				// 取消收藏
-				await uncollectImage(props.data.id)
-				isCollect.value = false
-				$u.toast('已取消收藏')
-			} else {
-				// 收藏
-				await collectImage(props.data.id)
-				isCollect.value = true
-				$u.toast('收藏成功')
+		// 不传 loading：图标已经立刻变了，再盖一层遮罩只会把这份确定感收回去
+		await runExclusive('collect', async () => {
+			const next = !isCollect.value
+
+			/**
+			 * 先把图标切过去，再发请求（乐观更新）。
+			 *
+			 * 收藏是个高频轻操作，等接口回来再变，手感上就是"点了没反应"，
+			 * 用户会以为没点上而连点。失败时回滚，并把后端的真实原因弹出来，
+			 * 所以不会出现"看着收藏了其实没收藏"的假象。
+			 */
+			isCollect.value = next
+			if (next) playCollectAnim()
+
+			try {
+				if (next) {
+					await collectImage(props.data.id)
+				} else {
+					await uncollectImage(props.data.id)
+				}
+				return next ? '收藏成功' : '已取消收藏'
+			} catch (error) {
+				console.error('[Wallpaper Btn] 收藏操作失败:', error)
+				isCollect.value = !next
+				return error.message || '操作失败'
 			}
-		} catch (error) {
-			console.error('[Wallpaper Btn] 收藏操作失败:', error)
-			$u.toast(error.message || '操作失败')
-		}
+		})
 	};
 
 	// 下载图片
@@ -165,82 +259,81 @@
 			return
 		}
 
-		if (!props.data.image) {
+		/**
+		 * 保存到相册必须用原图。
+		 * data.image 是详情页展示用的压缩图（720px），壁纸存下来会糊；
+		 * downloadUrl 才是未经处理的原图。老调用方没传 downloadUrl 时退回 image，
+		 * 保证行为不会中断。
+		 */
+		const sourceUrl = props.data.downloadUrl || props.data.image
+		if (!sourceUrl) {
 			console.error('[Wallpaper Btn] 缺少图片URL')
 			$u.toast('图片信息错误')
 			return
 		}
 
-		uni.showLoading({
-			title: '保存中...'
-		})
+		/**
+		 * 整个流程串成 await 链，而不是原来的回调嵌套。
+		 *
+		 * 回调式写法下，onDownload 在 downloadFile 发出去的那一刻就返回了，
+		 * 防重入的锁会在文件真正下载完之前就释放，连点照样能重复扣次数。
+		 * 顺带修掉一个旧问题：原来 hideLoading 挂在 downloadFile 的 complete 上，
+		 * 保存到相册还在进行时遮罩就没了。
+		 */
+		await runExclusive('download', async () => {
+			// 1. 先记录下载。这一步会扣一次下载次数，
+			//    VIP 专属 / 次数不足都在这里被拒，失败就不该再去下载文件
+			try {
+				await downloadImage(props.data.id)
+			} catch (error) {
+				console.error('[Wallpaper Btn] 下载失败:', error)
+				return error.message || '下载失败'
+			}
 
-		try {
-			// 1. 先记录下载历史
-			await downloadImage(props.data.id)
- 
 			// 2. 下载图片到本地
-			uni.downloadFile({
-				url: props.data.image,
-				success: res => {
-					if(res.statusCode === 200) {
-						const isVideo = /\.mp4$/i.test(res.tempFilePath);
-						// #ifndef H5
-						if (isVideo) {
-							uni.saveVideoToPhotosAlbum({
-								filePath: res.tempFilePath,
-								success: () => {
-									$u.toast('保存成功！')
-									// 刷新用户信息(更新下载次数)
-									userStore.refreshUserInfo()
-									// 显示插屏广告
-									showInterstitialAdIfNeeded()
-								},
-								fail: err => {
-									console.error('[Wallpaper Btn] 视频保存失败:', err)
-									$u.toast(`保存失败：${err.errMsg}`)
-								}
-							});
-						} else {
-							uni.saveImageToPhotosAlbum({
-								filePath: res.tempFilePath,
-								success: () => {
-									$u.toast('保存成功！')
-									// 刷新用户信息(更新下载次数)
-									userStore.refreshUserInfo()
-									// 显示插屏广告
-									showInterstitialAdIfNeeded()
-								},
-								fail: err => {
-									console.error('[Wallpaper Btn] 图片保存失败:', err)
-									$u.toast(`保存失败：${err.errMsg}`)
-								}
-							});
-						}
-						// #endif
-						// #ifdef H5
-						uni.previewImage({
-							urls: [res.tempFilePath]
-						})
-						// #endif
-					} else {
-						console.error('[Wallpaper Btn] 下载失败, statusCode:', res.statusCode)
-						$u.toast('下载失败, 请稍后再试~')
-					}
-				},
-				fail: (err) => {
-					console.error('[Wallpaper Btn] 下载文件失败:', err)
-					$u.toast('下载失败, 请稍后再试~')
-				},
-				complete: () => {
-					uni.hideLoading()
-				}
+			let res
+			try {
+				res = await new Promise((resolve, reject) => {
+					uni.downloadFile({ url: sourceUrl, success: resolve, fail: reject })
+				})
+			} catch (err) {
+				console.error('[Wallpaper Btn] 下载文件失败:', err)
+				return '下载失败, 请稍后再试~'
+			}
+
+			if (res.statusCode !== 200) {
+				console.error('[Wallpaper Btn] 下载失败, statusCode:', res.statusCode)
+				return '下载失败, 请稍后再试~'
+			}
+
+			// 3. 保存到相册
+			// #ifdef H5
+			uni.previewImage({
+				urls: [res.tempFilePath]
 			})
-		} catch (error) {
-			uni.hideLoading()
-			console.error('[Wallpaper Btn] 下载失败:', error)
-			$u.toast(error.message || '下载失败')
-		}
+			// #endif
+
+			// #ifndef H5
+			const isVideo = /\.mp4$/i.test(res.tempFilePath)
+			try {
+				await new Promise((resolve, reject) => {
+					if (isVideo) {
+						uni.saveVideoToPhotosAlbum({ filePath: res.tempFilePath, success: resolve, fail: reject })
+					} else {
+						uni.saveImageToPhotosAlbum({ filePath: res.tempFilePath, success: resolve, fail: reject })
+					}
+				})
+				// 刷新用户信息(更新下载次数)
+				userStore.refreshUserInfo()
+				// 显示插屏广告
+				showInterstitialAdIfNeeded()
+				return '保存成功！'
+			} catch (err) {
+				console.error('[Wallpaper Btn] 保存失败:', err)
+				return `保存失败：${err.errMsg || '请检查相册权限'}`
+			}
+			// #endif
+		}, { title: '保存中...' })
 	};
 
 	// 分享
@@ -330,9 +423,48 @@
 			gap: 10px;
 		}
 		
+		/**
+		 * 原来只有 text-align: center，那只管水平方向。
+		 * 图标在按钮里是按基线排列的，几个图标尺寸一旦不一致，
+		 * 高的那个就会下沉，整排看起来是斜的。这里改成 flex 真正居中，
+		 * 以后即使某个图标大小不同也不会错位。
+		 */
 		&__block {
 			flex: 1;
-			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 100%;
 		}
+	}
+
+	/**
+	 * 收藏图标的动画。
+	 *
+	 * --on   收藏后常驻略放大，静态下也能一眼看出状态，不只靠颜色
+	 * --pop  收藏那一下的弹跳，先冲到 1.45 再回落到 1.12，
+	 *        用带回弹的缓动（cubic-bezier 第四个值 > 1）而不是线性，手感才不木
+	 * 取消收藏走 transition 缩回 1，不播弹跳——取消是个"收回"动作，弹一下反而不对
+	 */
+	.collect-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+		&--on {
+			transform: scale(1.12);
+		}
+
+		&--pop {
+			animation: collect-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+		}
+	}
+
+	@keyframes collect-pop {
+		0%   { transform: scale(1); }
+		40%  { transform: scale(1.45); }
+		70%  { transform: scale(0.94); }
+		100% { transform: scale(1.12); }
 	}
 </style>

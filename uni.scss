@@ -50,6 +50,14 @@ $font-size-sm: 12px;
 $font-size-base: 14px;
 $font-size-lg: 16px;
 
+/**
+ * 自定义字体栈。uni.scss 会被自动注入每个组件，所以各处直接用 $font-agile 即可。
+ * fontAgile 现在没有可用的字体文件（见 static/css/fontFamily.scss 的说明），
+ * 这里逐级回落到系统字体，保证字体缺失时文字照常渲染，而不是报错或留白。
+ */
+$font-agile: fontAgile, -apple-system, BlinkMacSystemFont, 'PingFang SC',
+	'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+
 /* 图片尺寸 */
 $img-size-sm: 20px;
 $img-size-base: 26px;

@@ -5,8 +5,15 @@
 		<view class="redeem-container fu-m-x-30 fu-m-t-20">
 			<!-- 兑换卡片 -->
 			<view class="redeem-card fu-border fu-bg-main fu-b-r-10 fu-p-30">
+				<!--
+					字号一律写成带 rpx 的字符串，不要写裸数字。
+					uview-plus 的 unit 配成了 rpx，addUnit 对裸数字会再乘 2
+					（size="32" 实际渲染成 64rpx），本页原来 10 处 up-text 全是意图的两倍：
+					标题 64rpx 比下面按钮里写死的 32rpx 文字大了整整一倍。
+					带单位的字符串 addUnit 会原样返回，所见即所得。
+				-->
 				<view class="fu-m-b-20">
-					<up-text text="请输入您的VIP卡密" color="#ffffff" size="32" bold />
+					<up-text text="请输入您的VIP卡密" color="#ffffff" size="32rpx" bold />
 				</view>
 
 				<!-- 卡密输入框 -->
@@ -33,15 +40,15 @@
 
 				<!-- 提示信息 -->
 				<view class="tips-box">
-					<up-text text="温馨提示:" color="#FFD700" size="28" bold />
+					<up-text text="温馨提示:" color="#FFD700" size="28rpx" bold />
 					<view class="fu-m-t-10">
-						<up-text text="1. 每个VIP卡密仅可使用一次" color="#999999" size="26" />
+						<up-text text="1. 每个VIP卡密仅可使用一次" color="#999999" size="26rpx" />
 					</view>
 					<view class="fu-m-t-8">
-						<up-text text="2. 激活成功后立即生效,VIP期间免费使用" color="#999999" size="26" />
+						<up-text text="2. 激活成功后立即生效,VIP期间免费使用" color="#999999" size="26rpx" />
 					</view>
 					<view class="fu-m-t-8">
-						<up-text text="3. 请妥善保管您的卡密,避免泄露" color="#999999" size="26" />
+						<up-text text="3. 请妥善保管您的卡密,避免泄露" color="#999999" size="26rpx" />
 					</view>
 				</view>
 			</view>
@@ -49,7 +56,7 @@
 			<!-- 激活记录 -->
 			<view class="history-section fu-m-t-40">
 				<view class="fu-m-b-30">
-					<up-text text="激活记录" color="#ffffff" size="32" bold />
+					<up-text text="激活记录" color="#ffffff" size="32rpx" bold />
 				</view>
 
 				<view v-if="historyList.length > 0" class="history-list">
@@ -60,20 +67,20 @@
 					>
 						<view class="fu-flex fu-flex-row-between fu-flex-column-center">
 							<view class="info-section">
-								<up-text :text="`卡密: ${maskCode(item.cardCode)}`" color="#ffffff" size="28" />
+								<up-text :text="`卡密: ${maskCode(item.cardCode)}`" color="#ffffff" size="28rpx" />
 								<view class="fu-m-t-15">
-									<up-text :text="`激活时间: ${formatTime(item.activatedAt)}`" color="#999999" size="24" />
+									<up-text :text="`激活时间: ${formatTime(item.activatedAt)}`" color="#999999" size="24rpx" />
 								</view>
 							</view>
 							<view class="reward-badge">
-								<up-text :text="`${item.days}天VIP`" color="#FFD700" size="26" bold />
+								<up-text :text="`${item.days}天VIP`" color="#FFD700" size="26rpx" bold />
 							</view>
 						</view>
 					</view>
 				</view>
 
 				<view v-else class="empty-box fu-flex fu-flex-direction-column fu-flex-column-center fu-p-t-60 fu-p-b-60">
-					<up-text text="暂无激活记录" color="#999999" size="24" />
+					<up-text text="暂无激活记录" color="#999999" size="24rpx" />
 				</view>
 			</view>
 		</view>

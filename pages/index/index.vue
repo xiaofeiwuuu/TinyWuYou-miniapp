@@ -19,7 +19,8 @@ import index from "./components/index/index.vue";
 import classify from "./components/classify/index.vue";
 import find from "./components/find/index.vue";
 import user from "./components/user/index.vue";
-import { onShareAppMessage } from "@dcloudio/uni-app";
+import { onShareAppMessage, onLoad } from "@dcloudio/uni-app";
+import { useAppInfoStore } from "@/stores/appInfo.js";
 
 // 注册组件
 defineComponent({
@@ -32,7 +33,35 @@ defineComponent({
 // data数据
 const { $mConstDataConfig } =
   getCurrentInstance().appContext.config.globalProperties;
+const appInfoStore = useAppInfoStore();
 let pagePath = ref("index");
+
+/**
+ * 小程序信息（名称/分享文案/公告/联系方式）在首页统一拉一次。
+ *
+ * 放首页而不是 App.vue 的 onLaunch：onLaunch 里发请求时密钥交换可能还没完成，
+ * 而这是个公开接口，等首页起来再拉不影响任何东西，还能少一条竞态。
+ * store 有缓存和兜底，拉之前界面也是好的。
+ */
+onLoad(() => {
+  appInfoStore.fetchInfo().then(showAnnouncementIfNeeded);
+});
+
+// 公告弹窗。用系统 modal 而不是自绘弹窗：只有标题和正文，
+// 自绘还要处理层级、滚动和安全区，不值当
+const showAnnouncementIfNeeded = () => {
+  const announcement = appInfoStore.pendingAnnouncement;
+  if (!announcement) return;
+
+  uni.showModal({
+    title: announcement.title || "公告",
+    content: announcement.content,
+    showCancel: false,
+    confirmText: "我知道了",
+    // 无论用户怎么关掉都算已读，否则点遮罩关闭后下次进来还会弹
+    complete: () => appInfoStore.markAnnouncementSeen(),
+  });
+};
 
 // methods方法
 // 处理tabbar切换事件
@@ -58,7 +87,8 @@ onShareAppMessage(() => {
   
 
   return {
-    title: "TinyWuYou-壁纸 精美壁纸头像等你来拿！",
+    // 分享文案由后台配置，没配就退回小程序名（store 里做的兜底）
+    title: appInfoStore.shareTitle,
     path: `/pages/index/index?inviteCode=${inviteCode}`,
     query: `inviteCode=${inviteCode}`,
     // imageUrl: $mAssetsPath.banner || "",

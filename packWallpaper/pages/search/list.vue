@@ -12,7 +12,7 @@
 		</up-sticky>
 		
 		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
-			<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />
+			<jc-grid :list="list" @click="onClick('imageDetail', $event)" />
 			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view>
 	</view>
@@ -23,7 +23,7 @@
 	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	
 	// data数据
-	const { $u, $mUtil, $parseURL, $mAssetsPath, $mConstDataConfig } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $mUtil, $parseURL, $mAssetsPath, $mConstDataConfig, $openPage } = getCurrentInstance().appContext.config.globalProperties;
 	let navInfo = ref({});
 	const tabsList = ref([
 		{ id: 0, name: '推荐' },
@@ -68,11 +68,35 @@
 	});
 	
 	// computed计算属性
+	// 必须给 px：u-sticky 内部用 getPx()，纯数字一律按 px 处理，
+	// 传 rpx 数值会让吸顶偏移放大约一倍，tab 下面会露出滚动的内容
 	const customNavHeight = computed(() => {
-		return $mUtil.pxToRpx($u.sys().statusBarHeight + 44);
+		return $u.sys().statusBarHeight + 44;
 	});
 	
 	// methods方法
+	/**
+	 * 模板里一直在调 onClick，但这个函数从来没有定义过——
+	 * 点图片和切 tab 都会直接抛 "onClick is not a function"。
+	 *
+	 * 注意：这个页面的列表还是模板自带的假数据（$mAssetsPath.mobile 等本地图），
+	 * 没有 id，所以补上这个函数只是让它不再报错，搜索本身还没接后端。
+	 */
+	const onClick = (state, e) => {
+		switch(state) {
+			case 'tabs':
+				init()
+				break
+			case 'imageDetail':
+				if(!e || !e.id) return console.error('[SearchList] 图片缺少 ID:', e)
+				// 详情页只有一个，布局由图片自己的 imageType 决定，这里不用判断类型
+				$openPage({name: 'imageDetail', query: { imageId: e.id, type: e.imageType }})
+				break
+			default:
+				break
+		}
+	};
+
 	// 处理搜索
 	const handleSearch = (value) => {
 		init()

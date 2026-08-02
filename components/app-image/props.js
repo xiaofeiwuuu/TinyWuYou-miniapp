@@ -94,6 +94,13 @@ export default {
 		customStyle: {
 			type: [Object, String],
 			default: () => ({})
+		},
+		// 加载失败时显示的占位图。不配则退回 errorIcon 图标占位。
+		// 注意占位图要放本地 static 目录，别再指向图床——
+		// 图床挂掉正是需要占位图的场景，占位图自己也挂就没意义了
+		errorSrc: {
+			type: String,
+			default: ''
 		}
     }
 }

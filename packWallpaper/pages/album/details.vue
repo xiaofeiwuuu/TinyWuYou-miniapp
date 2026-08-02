@@ -25,7 +25,7 @@
 			</view>
 			
 			<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
-				<jc-grid :list="list" @click="onClick('mobileDetails', $event)" />
+				<jc-grid :list="list" @click="onClick('imageDetail', $event)" />
 				<jc-loading-more :loadingType="queryParams.loadingType" />
 			</view>
 			
@@ -54,15 +54,18 @@
 	});
 	
 	// methods方法
-	const onClick = (state) => {
+	// item: 被点击的图片对象。原来这个参数没接，模板传了 $event 也被丢掉，
+	// 跳详情页时不带 imageId，进去只能打印"缺少图片ID参数"
+	const onClick = (state, item) => {
 		switch(state) {
 			case 'praise':
 				if(isPraise.value) return $u.toast('你已经点过赞啦~')
 				isPraise.value = !isPraise.value;
 				$u.toast('感谢你的赞赏~')
 				break
-			case 'mobileDetails':
-				$openPage({name: state})
+			case 'imageDetail':
+				if(!item || !item.id) return console.error('[AlbumDetails] 图片缺少 ID:', item)
+				$openPage({name: 'imageDetail', query: { imageId: item.id, type: item.imageType }})
 				break
 			default:
 				break

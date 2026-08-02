@@ -14,6 +14,16 @@ const PATH = indexConfig.assetsPath;
 export default {
 	// 应用LOGO
 	appLogo: PATH + 'logo.png',
+
+	/**
+	 * 默认头像。
+	 *
+	 * 必须是本地图。原来兜底写的是 https://picsum.photos/200/200，
+	 * 那是外部域名，不在小程序的 downloadFile 合法域名白名单里，
+	 * 真机上（开发者工具关掉"不校验合法域名"后）根本加载不出来——
+	 * 而这个兜底恰恰只在"没有头像"时才用到，等于必坏。
+	 */
+	defaultAvatar: PATH + 'logo.png',
 	
 	// 素材
 	banner: PATH + 'img/banner.png',

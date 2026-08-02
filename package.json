@@ -1,7 +1,6 @@
 {
     "dependencies": {
         "crypto-js": "^4.2.0",
-        "node-forge": "^1.4.0",
         "pinia": "^3.0.3",
         "uview-plus": "^3.8.86"
     },
