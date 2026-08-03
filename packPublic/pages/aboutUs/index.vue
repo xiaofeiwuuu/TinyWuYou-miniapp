@@ -23,18 +23,17 @@
 			<!-- 联系方式：后台一项都没配就整块不显示，避免出现一排空值 -->
 			<view v-if="appInfoStore.hasContact" class="fu-m-x-30 fu-m-t-50">
 				<view class="menu-card">
+					<!-- 微信号和邮箱直接点整行复制，不再显示「复制」二字 -->
 					<view v-if="appInfoStore.contact.wechat" class="menu-item menu-item-border" @click="onCopy(appInfoStore.contact.wechat, '微信号')">
 						<view class="menu-title">客服微信</view>
 						<view class="menu-value">
 							<text class="menu-value__text">{{ appInfoStore.contact.wechat }}</text>
-							<text class="menu-value__copy">复制</text>
 						</view>
 					</view>
 					<view v-if="appInfoStore.contact.email" class="menu-item" :class="{ 'menu-item-border': !!appInfoStore.contact.workTime }" @click="onCopy(appInfoStore.contact.email, '邮箱')">
 						<view class="menu-title">邮箱</view>
 						<view class="menu-value">
 							<text class="menu-value__text">{{ appInfoStore.contact.email }}</text>
-							<text class="menu-value__copy">复制</text>
 						</view>
 					</view>
 					<view v-if="appInfoStore.contact.workTime" class="menu-item">

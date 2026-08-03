@@ -16,7 +16,7 @@
         <view v-if="contentType === 'user_agreement'" class="text-content">
         <view class="section">
           <view class="title">用户协议</view>
-          <view class="update-time">更新日期：2025年1月1日</view>
+          <view class="update-time">更新日期：2026年8月3日</view>
           <view class="update-time">生效日期：2025年1月1日</view>
         </view>
 
@@ -70,7 +70,7 @@
             您在使用过程中应遵守中华人民共和国法律法规，不得从事违法违规行为。
           </view>
           <view class="paragraph">
-            4.2 请勿上传、传播含有违法、侵权、低俗等不良内容的图片或文字。
+            4.2 请勿传播从本小程序获取的内容用于违法、侵权或其他不当用途。
           </view>
           <view class="paragraph">
             4.3 请勿使用技术手段干扰小程序运行或不当获取服务资源。
@@ -92,7 +92,7 @@
           </view>
           <view class="paragraph">
             5.3 若您认为内容存在侵权或不当，请通过【我的 →
-            联系客服】反馈，我们将在核实后及时处理。
+            在线客服】或《侵权联系》页反馈，我们将在核实后及时处理。
           </view>
         </view>
 
@@ -125,7 +125,9 @@
         <view class="section">
           <view class="section-title">八、账户与协议终止</view>
           <view class="paragraph">
-            8.1 您可随时停止使用本小程序服务，或联系客服删除个人信息。
+            8.1
+            您可随时停止使用本小程序服务。如需删除个人信息或注销账号，
+            请通过"在线客服"联系我们，具体处理方式见《隐私政策》。
           </view>
           <view class="paragraph">
             8.2 若严重违反本协议或相关法律法规，我们有权暂停或终止服务。
@@ -151,7 +153,7 @@
         <view v-else-if="contentType === 'privacy_policy'" class="text-content">
         <view class="section">
           <view class="title">隐私政策</view>
-          <view class="update-time">更新日期: 2025年1月1日</view>
+          <view class="update-time">更新日期: 2026年8月3日</view>
           <view class="update-time">生效日期: 2025年1月1日</view>
         </view>
 
@@ -163,35 +165,73 @@
         </view>
 
         <view class="section">
-          <view class="section-title">一、信息收集情况</view>
+          <view class="section-title">一、我们收集的信息</view>
           <view class="paragraph">
-            1.1
-            本小程序不收集任何个人信息。即便使用微信登录，也仅作为登录入口，不获取昵称、头像或其他信息。
+            1.1 账号信息：您首次使用时，我们通过微信登录获取并存储您的
+            微信 OpenID（用于识别账号，不能反查您的微信号）。
+            OpenID 是必需信息，不提供则无法使用下载、收藏等功能。
           </view>
           <view class="paragraph">
-            1.2
-            保存图片功能：为了让您将壁纸保存到手机相册，小程序需要访问相册，但不会访问或收集相册中其他内容。
+            1.2 资料信息：昵称与头像。默认为系统生成的默认值，
+            您可在【我的 → 设置】中自行修改。此项非必需，不填不影响使用。
           </view>
           <view class="paragraph">
-            1.3 复制功能：用户使用复制功能时，小程序不会收集粘贴板的文本内容。
+            1.3
+            使用记录：为实现下载次数统计、收藏夹、签到与邀请奖励等功能，
+            我们会记录您的下载记录、收藏记录、签到日期、邀请关系与广告奖励领取记录。
+          </view>
+          <view class="paragraph">
+            1.4 设备与日志：为保障账号安全与排查故障，我们会记录
+            登录时间与访问 IP。
+          </view>
+          <view class="paragraph">
+            1.5
+            相册权限：仅在您点击"保存到相册"或使用图片信息编辑功能时申请，
+            用于写入或读取您主动选择的那一张照片，
+            我们不会浏览、读取或上传相册中的其他内容。
+            图片信息编辑全程在您的手机本地完成，照片不会上传到我们的服务器。
+          </view>
+          <view class="paragraph">
+            1.6 剪贴板：仅在您主动点击复制时写入，我们不读取剪贴板内容。
+          </view>
+          <view class="paragraph">
+            1.7
+            第三方服务：本小程序接入了微信广告组件。广告的展示与统计由
+            微信广告平台处理，其信息处理规则适用《微信隐私保护指引》。
           </view>
         </view>
 
         <view class="section">
-          <view class="section-title">二、信息使用与保护</view>
+          <view class="section-title">二、信息的使用与保护</view>
           <view class="paragraph">
-            2.1 由于本小程序不收集用户个人信息，因此无需进行存储或处理。
+            2.1 上述信息仅用于实现小程序自身功能，
+            我们不会向任何第三方出售、出租或交易您的个人信息。
           </view>
           <view class="paragraph">
-            2.2 我们仍会采取基本技术措施确保小程序运行安全。
+            2.2
+            信息在传输过程中经过加密，服务端存储于境内服务器，并设有访问权限控制。
+          </view>
+          <view class="paragraph">
+            2.3
+            我们仅在实现上述功能所必需的期间内保存您的信息；您注销账号后，
+            相关信息将被删除或匿名化处理。
           </view>
         </view>
 
         <view class="section">
-          <view class="section-title">三、用户权利</view>
-          <view class="paragraph"> 3.1 用户无需担心个人信息泄露。 </view>
+          <view class="section-title">三、您的权利</view>
           <view class="paragraph">
-            3.2 如果有疑问或需要帮助，请通过小程序内“在线客服”功能联系我们。
+            3.1 查阅与更正：您可在【我的】页面查看账号信息，
+            并在【我的 → 设置】中修改昵称和头像。
+          </view>
+          <view class="paragraph">
+            3.2 删除与注销：如需删除个人信息或注销账号，
+            请通过小程序内"在线客服"联系我们，我们将在 15 个工作日内处理。
+          </view>
+          <view class="paragraph">
+            3.3 撤回授权：您可在微信"设置 → 隐私 → 授权管理"中
+            撤回对本小程序的相册等授权。撤回后相关功能将无法使用，
+            但不影响此前基于授权已进行的信息处理。
           </view>
         </view>
 
@@ -222,7 +262,7 @@
         <view v-else class="text-content">
         <view class="section">
           <view class="title">侵权投诉指引</view>
-          <view class="update-time">更新日期: 2025年10月25日</view>
+          <view class="update-time">更新日期: 2026年8月3日</view>
         </view>
 
         <view class="section">
@@ -271,15 +311,16 @@
         <view class="section">
           <view class="section-title">三、投诉方式</view>
           <view class="paragraph"> 您可以通过以下方式提交： </view>
-          <view class="paragraph indent">
-            • 小程序内反馈：进入"我的" → "我要吐槽"，选择"侵权投诉"，上传材料。
-          </view>
+          <!--
+            原来第一条写的是「我的 → 我要吐槽」，但那个菜单在 constData 里
+            一直是注释掉的，用户根本找不到——投诉指引指向一个不存在的入口，
+            比不写更糟。已删掉，只保留确实可用的两条。
+          -->
           <view class="paragraph indent">
             • 在线客服：进入"我的" → "在线客服"，联系客服提交材料。
           </view>
-          <view class="paragraph indent">
-            • 邮件投诉：发送至
-            copyright@tinywuyou.example.com，邮件主题注明"侵权投诉"。
+          <view v-if="contact.email" class="paragraph indent">
+            • 邮件投诉：发送至 {{ contact.email }}，邮件主题注明"侵权投诉"。
           </view>
         </view>
 
@@ -307,19 +348,32 @@
           </view>
         </view>
 
+        <!--
+          联系方式来自后台「运营管理 → 小程序信息」，改完即时生效。
+          原来这里写死的是 copyright@tinywuyou.example.com——
+          example.com 是 IANA 的保留域名，那是个永远收不到邮件的假地址，
+          而这一页恰恰是给权利人投诉用的，留个假邮箱等于没有投诉渠道。
+        -->
         <view class="section contact-box">
           <view class="contact-title">联系我们</view>
-          <view class="contact-item">
+          <view v-if="contact.email" class="contact-item" @click="onCopy(contact.email, '邮箱')">
             <text class="label">投诉邮箱:</text>
-            <text class="value">copyright@tinywuyou.example.com</text>
+            <text class="value">{{ contact.email }}</text>
           </view>
-          <view class="contact-item">
+          <view v-if="contact.wechat" class="contact-item" @click="onCopy(contact.wechat, '微信号')">
+            <text class="label">客服微信:</text>
+            <text class="value">{{ contact.wechat }}</text>
+          </view>
+          <view v-if="contact.workTime" class="contact-item">
             <text class="label">客服时间:</text>
-            <text class="value">工作日 9:00-18:00</text>
+            <text class="value">{{ contact.workTime }}</text>
           </view>
           <view class="contact-item">
             <text class="label">处理时效:</text>
             <text class="value">3-7个工作日</text>
+          </view>
+          <view v-if="!hasContact" class="contact-item">
+            <text class="value">请通过小程序内「我的 → 在线客服」联系我们</text>
           </view>
         </view>
         </view>
@@ -329,14 +383,32 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { getCurrentInstance } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
+import { useAppInfoStore } from "@/stores/appInfo.js";
 
 // data数据
-const { $parseURL, $mUtil } = getCurrentInstance().appContext.config.globalProperties;
+const { $u, $parseURL, $mUtil } = getCurrentInstance().appContext.config.globalProperties;
+const appInfoStore = useAppInfoStore();
 const contentType = ref("");
 const navTitle = ref("");
+
+// store 自带缓存和兜底，拉取之前页面也是好的
+appInfoStore.fetchInfo();
+
+const contact = computed(() => appInfoStore.contact);
+const hasContact = computed(() => appInfoStore.hasContact);
+
+/** 投诉邮箱要能一键复制——手抄邮箱最容易出错，而这一页的入口本来就少 */
+const onCopy = (value, label) => {
+  if (!value) return;
+  uni.setClipboardData({
+    data: value,
+    success: () => $u.toast(`${label}已复制`),
+    fail: () => $u.toast("复制失败")
+  });
+};
 
 // 生命周期
 onLoad((options) => {
