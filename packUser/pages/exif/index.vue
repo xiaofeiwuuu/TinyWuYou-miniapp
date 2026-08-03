@@ -92,14 +92,15 @@
 		</view>
 
 		<!--
-			三个选择器都加 v-if：u-picker 的内容挂在 u-popup 里且没有 v-if 保护，
-			而 u-popup 关闭时只是把根节点压成 0×0、并没有 overflow: hidden，
-			内容会溢出到页面上（之前编辑资料页就这么漏出过一条竖排文字）。
-			u-transition 的 show 监听带 immediate: true，
-			所以挂载时 show 已为 true 也能正常播放进入动画。
+			这几个选择器不能加 v-if 让它"用到才挂载"。
+
+			u-transition 的 vueEnter() 是 async 的，内部依赖 nextTick 和一次
+			sleep(20)；u-popup 挂载后还要 retryComputedComponentRect 去查询子节点
+			尺寸。带着 show=true 直接挂载会打乱这套初始化——实测表现是弹窗
+			掉进页面流里，既不浮在上层也没有遮罩和工具栏。
+			保持常驻挂载，由 show 控制显隐，这才是这个库支持的用法。
 		-->
 		<up-picker
-			v-if="showDevice"
 			ref="devicePickerRef"
 			:show="showDevice"
 			:columns="deviceColumns"
@@ -113,7 +114,6 @@
 		/>
 
 		<up-picker
-			v-if="showLens"
 			:show="showLens"
 			:columns="lensColumns"
 			keyName="label"
@@ -125,7 +125,6 @@
 		/>
 
 		<up-picker
-			v-if="showPlace"
 			ref="placePickerRef"
 			:show="showPlace"
 			:columns="placeColumns"
@@ -139,7 +138,6 @@
 		/>
 
 		<up-datetime-picker
-			v-if="showTime"
 			:show="showTime"
 			v-model="timeValue"
 			mode="datetime"
