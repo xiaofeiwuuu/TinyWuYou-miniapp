@@ -22,6 +22,7 @@ export default {
 	
 	userRestEntrys: [
 		{ name: '在线客服', icon: $mAssetsPath.user5, openType: 'contact', isIcon: true },
+		{ name: '修改图片信息', icon: $mAssetsPath.user6, url: 'userExif', isIcon: true },
 		// { name: '我要吐槽', icon: $mAssetsPath.user6, url: 'feedback', isIcon: true },
 		// { name: '技术热线', icon: $mAssetsPath.user7, url: '', isIcon: false },
 	],

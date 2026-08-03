@@ -29,6 +29,7 @@
 			"root": "packUser",
 			"pages": [
 				{ "name": "userProfile", "path": "pages/profile/index", "style": { "navigationBarTitleText": "编辑资料" } },
+				{ "name": "userExif", "path": "pages/exif/index", "style": { "navigationBarTitleText": "修改图片信息" } },
 				{ "name": "redeemCode", "path": "pages/redeemCode/index", "style": { "navigationBarTitleText": "卡密兑换" } },
 				{ "name": "userDownload", "path": "pages/download/index", "style": { "navigationBarTitleText": "我的下载" } },
 				{ "name": "userCollect", "path": "pages/collect/index", "style": { "navigationBarTitleText": "我的收藏" } }
