@@ -1,9 +1,22 @@
 /**
  * 机型 / 镜头 / 地点 预设。
  *
- * Make、Model 用的是厂商写进 EXIF 的**原始值**，不是市售名称——
- * 相册和看图软件读的就是这些原始值，填市售名（如「iPhone 15 Pro Max」
- * 对某些安卓机而言）在部分软件里会对不上或显示不出来。
+ * Make、Model 用的是厂商写进 EXIF 的**原始值**，不是市售名称。
+ * 苹果比较特殊，它的 Model 就是市售名（"iPhone 17 Pro Max"）；
+ * 安卓厂商写的是内部型号代码（如三星 SM-S9480、小米 2211133C），
+ * 填市售名在看图软件里会对不上。
+ *
+ * ⚠️ 加新机型前务必核对 Model 的真实值。
+ * 拿不准就别加：一个编造的型号代码写进 EXIF，任何人一查就知道是假的，
+ * 比停留在旧机型更糟。最可靠的来源是那台手机拍的照片本身，
+ * 或者 设置 → 关于本机 里显示的型号。
+ *
+ * 当前状态（2026-08）：
+ *   Apple    已更新到 iPhone 17 系列，Model 即市售名，可确认
+ *   三星     S26 Ultra = SM-S948 系列（国行尾号 0），已查证
+ *   华为/小米/vivo/OPPO
+ *            仍是 2023-2024 机型。这几家 2025 年后新机的内部型号代码
+ *            没能查到可靠来源，没有编造，等拿到真实值再补。
  */
 
 /**
@@ -42,6 +55,22 @@ export const DEVICE_PRESETS = [
 		brand: 'Apple',
 		items: [
 			{
+				label: 'iPhone 17 Pro Max', make: 'Apple', model: 'iPhone 17 Pro Max', software: '26.0',
+				lenses: APPLE_LENSES('iPhone 17 Pro Max', { mainF: 6.765, mainA: 1.78, ultraF: 2.22, ultraA: 2.2, frontF: 2.69, frontA: 1.9 })
+			},
+			{
+				label: 'iPhone 17 Pro', make: 'Apple', model: 'iPhone 17 Pro', software: '26.0',
+				lenses: APPLE_LENSES('iPhone 17 Pro', { mainF: 6.765, mainA: 1.78, ultraF: 2.22, ultraA: 2.2, frontF: 2.69, frontA: 1.9 })
+			},
+			{
+				label: 'iPhone 17', make: 'Apple', model: 'iPhone 17', software: '26.0',
+				lenses: APPLE_LENSES('iPhone 17', { mainF: 5.96, mainA: 1.6, ultraF: 1.54, ultraA: 2.2, frontF: 2.69, frontA: 1.9 })
+			},
+			{
+				label: 'iPhone Air', make: 'Apple', model: 'iPhone Air', software: '26.0',
+				lenses: APPLE_LENSES('iPhone Air', { mainF: 6.765, mainA: 1.6, ultraF: 6.765, ultraA: 1.6, frontF: 2.69, frontA: 1.9 })
+			},
+			{
 				label: 'iPhone 16 Pro Max', make: 'Apple', model: 'iPhone 16 Pro Max', software: '18.5',
 				lenses: APPLE_LENSES('iPhone 16 Pro Max', { mainF: 6.765, mainA: 1.78, ultraF: 2.22, ultraA: 2.2, frontF: 2.69, frontA: 1.9 })
 			},
@@ -56,18 +85,6 @@ export const DEVICE_PRESETS = [
 			{
 				label: 'iPhone 15 Pro', make: 'Apple', model: 'iPhone 15 Pro', software: '17.5.1',
 				lenses: APPLE_LENSES('iPhone 15 Pro', { mainF: 6.86, mainA: 1.78, ultraF: 2.22, ultraA: 2.2, frontF: 2.69, frontA: 1.9 })
-			},
-			{
-				label: 'iPhone 15', make: 'Apple', model: 'iPhone 15', software: '17.5.1',
-				lenses: APPLE_LENSES('iPhone 15', { mainF: 5.96, mainA: 1.6, ultraF: 1.54, ultraA: 2.4, frontF: 2.69, frontA: 1.9 })
-			},
-			{
-				label: 'iPhone 14 Pro Max', make: 'Apple', model: 'iPhone 14 Pro Max', software: '16.6',
-				lenses: APPLE_LENSES('iPhone 14 Pro Max', { mainF: 6.86, mainA: 1.78, ultraF: 2.22, ultraA: 2.2, frontF: 2.69, frontA: 1.9 })
-			},
-			{
-				label: 'iPhone 13', make: 'Apple', model: 'iPhone 13', software: '15.6',
-				lenses: APPLE_LENSES('iPhone 13', { mainF: 5.7, mainA: 1.6, ultraF: 1.57, ultraA: 2.4, frontF: 2.71, frontA: 2.2 })
 			}
 		]
 	},
@@ -125,6 +142,14 @@ export const DEVICE_PRESETS = [
 					{ m: 'PHY110 back main camera 7.0mm f/1.7', f: 7.0, a: 1.7 },
 					{ m: 'PHY110 back wide camera 2.2mm f/2.0', f: 2.2, a: 2.0 },
 					{ m: 'PHY110 front camera 3.0mm f/2.4', f: 3.0, a: 2.4 })
+			},
+			{
+				// 国行型号尾号为 0（SM-S9480），海外为 B/U 等，EXIF 里写的是各自的完整型号
+				label: '三星 S26 Ultra', make: 'samsung', model: 'SM-S9480', software: 'One UI 8.5',
+				lenses: ANDROID_LENSES(
+					{ m: 'SM-S9480 back main camera 6.3mm f/1.7', f: 6.3, a: 1.7 },
+					{ m: 'SM-S9480 back wide camera 2.2mm f/2.2', f: 2.2, a: 2.2 },
+					{ m: 'SM-S9480 front camera 3.0mm f/2.2', f: 3.0, a: 2.2 })
 			},
 			{
 				label: '三星 S24 Ultra', make: 'samsung', model: 'SM-S9280', software: 'One UI 6.1',
