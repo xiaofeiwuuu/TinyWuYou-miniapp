@@ -21,9 +21,11 @@ const SEEN_KEY = '__announcement_seen__'
 
 const FALLBACK = {
 	appName: 'TinyWuYou-壁纸',
+	slogan: '用壁纸装点生活，让手机也能表达你的心情✨',
 	shareTitle: 'TinyWuYou-壁纸 精美壁纸头像等你来拿！',
 	logo: '',
 	contact: { wechat: '', email: '', workTime: '' },
+	faq: [],
 	announcement: { enabled: false }
 }
 
@@ -48,7 +50,18 @@ export const useAppInfoStore = defineStore('appInfo', () => {
 	// 后台没传 Logo 就用包内自带的，外部地址加载不出来时也有东西可显示
 	const logo = computed(() => info.value.logo || $mAssetsPath.appLogo)
 
+	const slogan = computed(() => info.value.slogan || FALLBACK.slogan)
+
 	const contact = computed(() => info.value.contact || FALLBACK.contact)
+
+	/** 后台没配 FAQ 时返回空数组，页面自己显示空态，不要塞一份写死的兜底内容 */
+	const faq = computed(() => (Array.isArray(info.value.faq) ? info.value.faq : []))
+
+	/** 是否配了任意一项联系方式，页面据此决定要不要显示那一块 */
+	const hasContact = computed(() => {
+		const c = contact.value
+		return Boolean(c && (c.wechat || c.email || c.workTime))
+	})
 
 	/**
 	 * 当前是否有该弹的公告。
@@ -116,9 +129,12 @@ export const useAppInfoStore = defineStore('appInfo', () => {
 		info,
 		isLoaded,
 		appName,
+		slogan,
 		shareTitle,
 		logo,
 		contact,
+		hasContact,
+		faq,
 		pendingAnnouncement,
 		markAnnouncementSeen,
 		fetchInfo

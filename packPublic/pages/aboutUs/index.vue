@@ -5,17 +5,48 @@
 		<view class="about-container">
 			<view class="fu-flex fu-flex-direction-column fu-flex-column-center fu-p-t-100">
 				<view class="fu-w-160 fu-h-160">
-					<app-image width="100%" height="160rpx" :src="$mAssetsPath.appLogo" radius="10"></app-image>
+					<!--
+						Logo、名称、标语都来自后台「运营管理 → 小程序信息」，改完即时生效。
+						原来分别是本地静态图、$u.sys().appName（读的是 manifest 里编译期写死的名字）
+						和一句硬编码文案，改任何一处都要重新发版并走微信审核。
+					-->
+					<app-image width="100%" height="100%" mode="aspectFit" bgColor="transparent" :src="appInfoStore.logo" radius="10"></app-image>
 				</view>
 
-				<view class="fu-text-c fu-font-32 fu-font-w-600 fu-m-t-30 text-white">{{ sysInfo.appName }}</view>
-				<view class="fu-text-c fu-m-t-20 text-gray">{{ '用壁纸装点生活，让手机也能表达你的心情✨' }}</view>
+				<view class="fu-text-c fu-font-32 fu-font-w-600 fu-m-t-30 text-white">{{ appInfoStore.appName }}</view>
+				<view class="fu-text-c fu-m-t-20 fu-m-x-60 text-gray">{{ appInfoStore.slogan }}</view>
 				<!-- #ifndef H5 -->
 				<view class="fu-text-c fu-m-t-20 text-gray">{{ `V${sysInfo.appVersion}` }}</view>
 				<!-- #endif -->
 			</view>
 
-			<view class="fu-m-x-30 fu-m-t-50">
+			<!-- 联系方式：后台一项都没配就整块不显示，避免出现一排空值 -->
+			<view v-if="appInfoStore.hasContact" class="fu-m-x-30 fu-m-t-50">
+				<view class="menu-card">
+					<view v-if="appInfoStore.contact.wechat" class="menu-item menu-item-border" @click="onCopy(appInfoStore.contact.wechat, '微信号')">
+						<view class="menu-title">客服微信</view>
+						<view class="menu-value">
+							<text class="menu-value__text">{{ appInfoStore.contact.wechat }}</text>
+							<text class="menu-value__copy">复制</text>
+						</view>
+					</view>
+					<view v-if="appInfoStore.contact.email" class="menu-item" :class="{ 'menu-item-border': !!appInfoStore.contact.workTime }" @click="onCopy(appInfoStore.contact.email, '邮箱')">
+						<view class="menu-title">邮箱</view>
+						<view class="menu-value">
+							<text class="menu-value__text">{{ appInfoStore.contact.email }}</text>
+							<text class="menu-value__copy">复制</text>
+						</view>
+					</view>
+					<view v-if="appInfoStore.contact.workTime" class="menu-item">
+						<view class="menu-title">工作时间</view>
+						<view class="menu-value">
+							<text class="menu-value__text">{{ appInfoStore.contact.workTime }}</text>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<view class="fu-m-x-30 fu-m-t-30">
 				<view class="menu-card">
 					<view
 						class="menu-item"
@@ -35,14 +66,29 @@
 
 <script setup>
 	import { getCurrentInstance, computed } from 'vue';
+	import { useAppInfoStore } from '@/stores/appInfo.js';
 
 	// data数据
-	const { $u, $openPage, $mUtil } = getCurrentInstance().appContext.config.globalProperties;
+	const { $u, $openPage, $mUtil, $mConstDataConfig } = getCurrentInstance().appContext.config.globalProperties;
+	const appInfoStore = useAppInfoStore();
+
+	// store 自带缓存和兜底，拉取之前页面也是好的，所以不需要 loading 态
+	appInfoStore.fetchInfo();
 
 	// computed计算属性
 	const sysInfo = computed(() => {
 		return $u.sys()
 	});
+
+	/** 微信号和邮箱都不好手抄，点一下直接复制 */
+	const onCopy = (value, label) => {
+		if (!value) return;
+		uni.setClipboardData({
+			data: value,
+			success: () => $u.toast(`${label}已复制`),
+			fail: () => $u.toast('复制失败')
+		});
+	};
 </script>
 
 <style scoped lang="scss">
@@ -86,5 +132,27 @@
 	font-size: 30rpx;
 	color: #ffffff;
 	font-weight: 500;
+}
+
+.menu-value {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+	// 邮箱可能很长，限制宽度免得把左边的标签挤没
+	max-width: 60%;
+
+	&__text {
+		color: #999999;
+		font-size: 26rpx;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__copy {
+		color: #55aaff;
+		font-size: 24rpx;
+		flex-shrink: 0;
+	}
 }
 </style>
