@@ -26,50 +26,97 @@
 				</block>
 			</view>
 
-			<!-- 修改项：统一做成"点一行 → 底部弹窗选择" -->
 			<view v-if="picked" class="card fu-border fu-bg-main fu-b-r-10 fu-m-t-20">
 				<up-text text="修改为" color="#ffffff" size="28rpx" bold />
 
 				<view class="fu-m-t-10">
-					<view class="field" @click="openDevice">
-						<up-text text="机型" color="#999999" size="26rpx" />
+					<!-- 机型：品牌 + 型号 两列联动 -->
+					<picker
+						mode="multiSelector"
+						:range="deviceRange"
+						:value="deviceIndex"
+						@columnchange="onDeviceColumnChange"
+						@change="onDeviceChange"
+					>
+						<view class="field">
+							<text class="field__label">机型</text>
+							<view class="field__right">
+								<text class="field__value" :class="{ 'field__value--dim': !device }">{{ device ? device.label : '请选择' }}</text>
+								<up-icon name="arrow-right" color="#666666" size="14" />
+							</view>
+						</view>
+					</picker>
+
+					<!-- 摄像头：单列。没选机型时不给点，避免弹出一个空选择器 -->
+					<picker
+						v-if="device"
+						mode="selector"
+						:range="lensLabels"
+						:value="lensIndex"
+						@change="onLensChange"
+					>
+						<view class="field">
+							<text class="field__label">摄像头</text>
+							<view class="field__right">
+								<text class="field__value" :class="{ 'field__value--dim': !lens }">{{ lens ? lens.label : '请选择' }}</text>
+								<up-icon name="arrow-right" color="#666666" size="14" />
+							</view>
+						</view>
+					</picker>
+					<view v-else class="field field--off" @click="$u.toast('请先选择机型')">
+						<text class="field__label">摄像头</text>
 						<view class="field__right">
-							<up-text :text="device ? device.label : '请选择'" :color="device ? '#ffffff' : '#666666'" size="26rpx" />
+							<text class="field__value field__value--dim">请先选机型</text>
 							<up-icon name="arrow-right" color="#666666" size="14" />
 						</view>
 					</view>
 
-					<view class="field" :class="{ 'field--off': !device }" @click="openLens">
-						<up-text text="摄像头" color="#999999" size="26rpx" />
-						<view class="field__right">
-							<up-text :text="lens ? lens.label : (device ? '请选择' : '请先选机型')" :color="lens ? '#ffffff' : '#666666'" size="26rpx" />
-							<up-icon name="arrow-right" color="#666666" size="14" />
+					<!-- 日期 -->
+					<picker mode="date" :value="dateStr || todayStr" @change="onDateChange">
+						<view class="field">
+							<text class="field__label">拍摄日期</text>
+							<view class="field__right">
+								<text class="field__value" :class="{ 'field__value--dim': !dateStr }">{{ dateStr || '保持原样' }}</text>
+								<up-icon name="arrow-right" color="#666666" size="14" />
+							</view>
 						</view>
-					</view>
+					</picker>
 
-					<view class="field" @click="openTime">
-						<up-text text="拍摄时间" color="#999999" size="26rpx" />
-						<view class="field__right">
-							<up-text :text="dateTime || '保持原样'" :color="dateTime ? '#ffffff' : '#666666'" size="26rpx" />
-							<up-icon name="arrow-right" color="#666666" size="14" />
+					<!-- 时刻 -->
+					<picker mode="time" :value="timeStr || '12:00'" @change="onTimeChange">
+						<view class="field">
+							<text class="field__label">拍摄时刻</text>
+							<view class="field__right">
+								<text class="field__value" :class="{ 'field__value--dim': !timeStr }">{{ timeStr || (dateStr ? '12:00' : '保持原样') }}</text>
+								<up-icon name="arrow-right" color="#666666" size="14" />
+							</view>
 						</view>
-					</view>
+					</picker>
 
-					<view class="field field--last" @click="openPlace">
-						<up-text text="拍摄地点" color="#999999" size="26rpx" />
-						<view class="field__right">
-							<up-text :text="place ? place.label : '保持原样'" :color="place ? '#ffffff' : '#666666'" size="26rpx" />
-							<up-icon name="arrow-right" color="#666666" size="14" />
+					<!-- 地点：地区 + 地点 两列联动 -->
+					<picker
+						mode="multiSelector"
+						:range="placeRange"
+						:value="placeIndex"
+						@columnchange="onPlaceColumnChange"
+						@change="onPlaceChange"
+					>
+						<view class="field field--last">
+							<text class="field__label">拍摄地点</text>
+							<view class="field__right">
+								<text class="field__value" :class="{ 'field__value--dim': !place }">{{ place ? place.label : '保持原样' }}</text>
+								<up-icon name="arrow-right" color="#666666" size="14" />
+							</view>
 						</view>
-					</view>
+					</picker>
 				</view>
 
-				<!-- 选好后把镜头参数摊开，让人能确认写进去的是什么 -->
+				<!-- 选好后摊开镜头参数，让人能确认写进去的是什么 -->
 				<view v-if="lens" class="detail fu-m-t-20">
 					{{ lens.model }}<br />{{ lens.focalLength }}mm　f/{{ lens.fNumber }}　等效 {{ lens.focal35 }}mm
 				</view>
 
-				<view v-if="dateTime || place" class="fu-m-t-20">
+				<view v-if="dateStr || timeStr || place" class="fu-m-t-20">
 					<up-button color="#333333" shape="round" :customStyle="{ height: '60rpx' }" @click="onReset">
 						<text style="color: #999999; font-size: 24rpx;">时间和地点恢复原样</text>
 					</up-button>
@@ -90,64 +137,6 @@
 				</view>
 			</view>
 		</view>
-
-		<!--
-			这几个选择器不能加 v-if 让它"用到才挂载"。
-
-			u-transition 的 vueEnter() 是 async 的，内部依赖 nextTick 和一次
-			sleep(20)；u-popup 挂载后还要 retryComputedComponentRect 去查询子节点
-			尺寸。带着 show=true 直接挂载会打乱这套初始化——实测表现是弹窗
-			掉进页面流里，既不浮在上层也没有遮罩和工具栏。
-			保持常驻挂载，由 show 控制显隐，这才是这个库支持的用法。
-		-->
-		<up-picker
-			ref="devicePickerRef"
-			:show="showDevice"
-			:columns="deviceColumns"
-			keyName="label"
-			title="选择机型"
-			@change="onDeviceChange"
-			@confirm="onDeviceConfirm"
-			@cancel="showDevice = false"
-			@close="showDevice = false"
-			closeOnClickOverlay
-		/>
-
-		<up-picker
-			:show="showLens"
-			:columns="lensColumns"
-			keyName="label"
-			title="选择摄像头"
-			@confirm="onLensConfirm"
-			@cancel="showLens = false"
-			@close="showLens = false"
-			closeOnClickOverlay
-		/>
-
-		<up-picker
-			ref="placePickerRef"
-			:show="showPlace"
-			:columns="placeColumns"
-			keyName="label"
-			title="选择拍摄地点"
-			@change="onPlaceChange"
-			@confirm="onPlaceConfirm"
-			@cancel="showPlace = false"
-			@close="showPlace = false"
-			closeOnClickOverlay
-		/>
-
-		<up-datetime-picker
-			:show="showTime"
-			v-model="timeValue"
-			mode="datetime"
-			title="选择拍摄时间"
-			:formatter="timeFormatter"
-			@confirm="onTimeConfirm"
-			@cancel="showTime = false"
-			@close="showTime = false"
-			closeOnClickOverlay
-		/>
 	</page-layout>
 </template>
 
@@ -157,6 +146,16 @@
 	 *
 	 * 全程在本机完成，照片不上传服务器——改的只是几十字节元数据，
 	 * 为它上传几 MB 原图既慢又没必要，也不该让用户的私人照片经过我们的服务器。
+	 *
+	 * ─── 为什么用原生 picker 而不是 uview-plus 的 u-picker ───
+	 * u-picker 这条路两头堵：
+	 *   常驻挂载  → u-popup 关闭时只把根节点压成 0×0、没有 overflow: hidden，
+	 *              选择器内容会整块漏在页面里
+	 *   加 v-if   → 组件带着 show=true 挂载，而 u-transition 的 vueEnter 是 async、
+	 *              u-popup 挂载后还要递归查询子节点尺寸，这套初始化会被打乱，
+	 *              弹窗掉进页面流里，没有遮罩也没有工具栏
+	 * 原生 <picker> 由微信自己渲染，没有 popup/transition/尺寸查询这套机制，
+	 * 不存在布局风险，而且原生就支持多列联动。
 	 *
 	 * 关键约束：选图必须 sizeType: ['original']。
 	 * 微信默认返回压缩图，而压缩会把 EXIF 整段丢掉，
@@ -172,122 +171,108 @@
 	const origin = ref({});
 	const device = ref(null);
 	const lens = ref(null);
-	const dateTime = ref('');   // 空 = 保持原样
-	const place = ref(null);    // null = 保持原样
+	const place = ref(null);
+	const dateStr = ref('');   // YYYY-MM-DD，空 = 保持原样
+	const timeStr = ref('');   // HH:mm
 	const saving = ref(false);
 
-	const showDevice = ref(false);
-	const showLens = ref(false);
-	const showTime = ref(false);
-	const showPlace = ref(false);
-	const timeValue = ref(Date.now());
+	const pad = (n) => String(n).padStart(2, '0');
+	const todayStr = (() => {
+		const d = new Date();
+		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	})();
 
-	// 两列联动需要调用组件的 setColumnValues，微信小程序下事件不回传实例，只能靠 ref
-	const devicePickerRef = ref(null);
-	const placePickerRef = ref(null);
-
-	/* ── 机型：品牌 + 型号 两列联动 ── */
+	/* ── 机型：两列联动 ── */
 	const brandIndex = ref(0);
-	const deviceColumns = ref([
-		DEVICE_PRESETS.map((g) => ({ label: g.brand })),
-		DEVICE_PRESETS[0].items
+	const modelIndex = ref(0);
+
+	// 原生 picker 的 range 只认字符串数组，所以传 label，回调里按下标取回完整对象
+	const deviceRange = computed(() => [
+		DEVICE_PRESETS.map((g) => g.brand),
+		(DEVICE_PRESETS[brandIndex.value] || DEVICE_PRESETS[0]).items.map((i) => i.label)
 	]);
+	const deviceIndex = computed(() => [brandIndex.value, modelIndex.value]);
 
-	const openDevice = () => {
-		// 打开时定位到当前已选项，而不是每次都回到第一个
-		if (device.value) {
-			const bi = DEVICE_PRESETS.findIndex((g) => g.items.some((i) => i.model === device.value.model));
-			if (bi >= 0) {
-				brandIndex.value = bi;
-				deviceColumns.value = [DEVICE_PRESETS.map((g) => ({ label: g.brand })), DEVICE_PRESETS[bi].items];
-			}
+	const onDeviceColumnChange = (e) => {
+		const { column, value } = e.detail;
+		if (column === 0) {
+			brandIndex.value = value;
+			// 换品牌后第二列内容整个变了，下标必须归零，
+			// 否则会停在一个越界的位置（比如从 7 款的苹果切到 2 款的华为）
+			modelIndex.value = 0;
+		} else {
+			modelIndex.value = value;
 		}
-		showDevice.value = true;
 	};
 
-	/**
-	 * 第一列（品牌）变了才刷新第二列，否则滚第二列时它会被不断重置。
-	 *
-	 * 用 ref 调组件方法而不是 e.picker：u-picker 的源码里明确写着
-	 * "微信小程序不能传递 this，会因为循环引用而报错"，
-	 * 所以 MP-WEIXIN 下 change 事件的载荷里根本没有 picker 字段。
-	 */
 	const onDeviceChange = (e) => {
-		if (e.columnIndex !== 0) return;
-		brandIndex.value = e.index;
-		devicePickerRef.value?.setColumnValues(1, DEVICE_PRESETS[e.index].items);
-	};
-
-	const onDeviceConfirm = (e) => {
-		const picked2 = e.value[1];
-		if (picked2) {
-			device.value = picked2;
-			// 换机型必须重选镜头，否则会出现"iPhone 机身配小米镜头"这种自相矛盾的组合
-			lens.value = picked2.lenses && picked2.lenses[0];
-		}
-		showDevice.value = false;
+		const [bi, mi] = e.detail.value;
+		brandIndex.value = bi;
+		modelIndex.value = mi;
+		const item = DEVICE_PRESETS[bi] && DEVICE_PRESETS[bi].items[mi];
+		if (!item) return;
+		device.value = item;
+		// 换机型必须重选镜头，否则会出现"iPhone 机身配小米镜头"这种自相矛盾的组合
+		lens.value = item.lenses && item.lenses[0];
+		lensIndex.value = 0;
 	};
 
 	/* ── 摄像头：单列 ── */
-	const lensColumns = computed(() => [device.value ? device.value.lenses : []]);
+	const lensIndex = ref(0);
+	const lensLabels = computed(() => (device.value ? device.value.lenses.map((l) => l.label) : []));
 
-	const openLens = () => {
-		if (!device.value) return $u.toast('请先选择机型');
-		showLens.value = true;
+	const onLensChange = (e) => {
+		const i = Number(e.detail.value);
+		lensIndex.value = i;
+		lens.value = device.value.lenses[i];
 	};
 
-	const onLensConfirm = (e) => {
-		if (e.value[0]) lens.value = e.value[0];
-		showLens.value = false;
-	};
+	/* ── 地点：两列联动 ── */
+	const regionIndex = ref(0);
+	const spotIndex = ref(0);
 
-	/* ── 地点：地区 + 地点 两列联动 ── */
-	const placeColumns = ref([
-		LOCATION_PRESETS.map((r) => ({ label: r.region })),
-		LOCATION_PRESETS[0].items
+	const placeRange = computed(() => [
+		LOCATION_PRESETS.map((r) => r.region),
+		(LOCATION_PRESETS[regionIndex.value] || LOCATION_PRESETS[0]).items.map((i) => i.label)
 	]);
+	const placeIndex = computed(() => [regionIndex.value, spotIndex.value]);
 
-	const openPlace = () => {
-		if (place.value) {
-			const ri = LOCATION_PRESETS.findIndex((r) => r.items.some((i) => i.label === place.value.label));
-			if (ri >= 0) {
-				placeColumns.value = [LOCATION_PRESETS.map((r) => ({ label: r.region })), LOCATION_PRESETS[ri].items];
-			}
+	const onPlaceColumnChange = (e) => {
+		const { column, value } = e.detail;
+		if (column === 0) {
+			regionIndex.value = value;
+			spotIndex.value = 0;
+		} else {
+			spotIndex.value = value;
 		}
-		showPlace.value = true;
 	};
 
 	const onPlaceChange = (e) => {
-		if (e.columnIndex !== 0) return;
-		placePickerRef.value?.setColumnValues(1, LOCATION_PRESETS[e.index].items);
-	};
-
-	const onPlaceConfirm = (e) => {
-		if (e.value[1]) place.value = e.value[1];
-		showPlace.value = false;
+		const [ri, si] = e.detail.value;
+		regionIndex.value = ri;
+		spotIndex.value = si;
+		const item = LOCATION_PRESETS[ri] && LOCATION_PRESETS[ri].items[si];
+		if (item) place.value = item;
 	};
 
 	/* ── 时间 ── */
-	const openTime = () => {
-		timeValue.value = Date.now();
-		showTime.value = true;
-	};
+	const onDateChange = (e) => { dateStr.value = e.detail.value; };
+	const onTimeChange = (e) => { timeStr.value = e.detail.value; };
 
-	const timeFormatter = (type, value) => {
-		const unit = { year: '年', month: '月', day: '日', hour: '时', minute: '分' }[type];
-		return unit ? `${value}${unit}` : value;
-	};
-
-	const onTimeConfirm = (e) => {
-		const d = new Date(e.value);
-		const p = (n) => String(n).padStart(2, '0');
-		// EXIF 时间格式固定是 "YYYY:MM:DD HH:mm:ss"，分隔符是冒号不是横杠
-		dateTime.value = `${d.getFullYear()}:${p(d.getMonth() + 1)}:${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-		showTime.value = false;
-	};
+	/**
+	 * 拼成 EXIF 要的格式 "YYYY:MM:DD HH:mm:ss"（分隔符是冒号不是横杠）。
+	 * 只选了日期没选时刻就补 12:00——用中午而不是 00:00:00，
+	 * 后者看起来像"没有时间信息"，容易让人误会没写进去。
+	 */
+	const exifDateTime = computed(() => {
+		if (!dateStr.value) return '';
+		const t = timeStr.value || '12:00';
+		return `${dateStr.value.replace(/-/g, ':')} ${t}:00`;
+	});
 
 	const onReset = () => {
-		dateTime.value = '';
+		dateStr.value = '';
+		timeStr.value = '';
 		place.value = null;
 	};
 
@@ -319,8 +304,9 @@
 				picked.value = { path };
 				device.value = null;
 				lens.value = null;
-				dateTime.value = '';
 				place.value = null;
+				dateStr.value = '';
+				timeStr.value = '';
 				origin.value = {};
 
 				try {
@@ -370,7 +356,7 @@
 				};
 			}
 			// 没选就不传，writeMeta 会保留原值
-			if (dateTime.value) meta.dateTime = dateTime.value;
+			if (exifDateTime.value) meta.dateTime = exifDateTime.value;
 			if (place.value) meta.gps = { lat: place.value.lat, lng: place.value.lng };
 
 			const out = writeMeta(await readFile(picked.value.path), meta);
@@ -426,17 +412,30 @@
 		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
 
 		&--last { border-bottom: none; }
-
-		// 未满足前置条件时变暗，但仍可点击——点了会提示"请先选机型"，
-		// 比直接无响应更容易理解
 		&--off { opacity: 0.5; }
+
+		&__label {
+			color: #999999;
+			font-size: 26rpx;
+		}
 
 		&__right {
 			display: flex;
 			align-items: center;
 			gap: 10rpx;
 			// 长机型名不要把左边的标签挤没
-			max-width: 60%;
+			max-width: 62%;
+		}
+
+		&__value {
+			color: #ffffff;
+			font-size: 26rpx;
+			// 超长就省略，不要换行把行高撑开
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+
+			&--dim { color: #666666; }
 		}
 	}
 
