@@ -11,12 +11,14 @@
  * 比停留在旧机型更糟。最可靠的来源是那台手机拍的照片本身，
  * 或者 设置 → 关于本机 里显示的型号。
  *
- * 当前状态（2026-08）：
- *   Apple    已更新到 iPhone 17 系列，Model 即市售名，可确认
- *   三星     S26 Ultra = SM-S948 系列（国行尾号 0），已查证
- *   华为/小米/vivo/OPPO
- *            仍是 2023-2024 机型。这几家 2025 年后新机的内部型号代码
- *            没能查到可靠来源，没有编造，等拿到真实值再补。
+ * 当前状态（2026-08）：全部为查证过的真实值，没有编造。
+ *   Apple    iPhone 17 系列 / Air，Model 即市售名
+ *   华为     Mate 80 Pro = SGT-AL50（国行，海外 SGT-LX9）
+ *   小米     17 Pro = 25098PN5AC
+ *   vivo     X300 Pro = V2502A（国行，海外 V2514）
+ *   OPPO     Find X9 Pro = PLG110（国行，海外 CPH2791）
+ *   三星     S26 Ultra = SM-S948 系列（国行尾号 0）
+ * 型号与镜头参数来源为 GSMArena 规格页的 Models 字段与相机段。
  */
 
 /**
@@ -44,10 +46,15 @@ const APPLE_LENSES = (name, ver) => [
 	}
 ]
 
+/**
+ * 安卓镜头。e35 是等效 35mm 焦距，各家差别不小（超广角 13~17mm 都有），
+ * 所以按机型实际值传入，不再统一写死一个近似值。
+ * 不传时退回一组常见值，保证老条目仍然可用。
+ */
 const ANDROID_LENSES = (main, ultra, front) => [
-	{ key: 'main', label: '主摄', model: main.m, focalLength: main.f, fNumber: main.a, focal35: 24 },
-	{ key: 'ultra', label: '超广角', model: ultra.m, focalLength: ultra.f, fNumber: ultra.a, focal35: 15 },
-	{ key: 'front', label: '前置', model: front.m, focalLength: front.f, fNumber: front.a, focal35: 26 }
+	{ key: 'main', label: '主摄', model: main.m, focalLength: main.f, fNumber: main.a, focal35: main.e35 || 24 },
+	{ key: 'ultra', label: '超广角', model: ultra.m, focalLength: ultra.f, fNumber: ultra.a, focal35: ultra.e35 || 15 },
+	{ key: 'front', label: '前置', model: front.m, focalLength: front.f, fNumber: front.a, focal35: front.e35 || 26 }
 ]
 
 export const DEVICE_PRESETS = [
@@ -92,6 +99,14 @@ export const DEVICE_PRESETS = [
 		brand: '华为',
 		items: [
 			{
+				// 国行为 SGT-AL50，海外版 SGT-LX9
+				label: 'Mate 80 Pro', make: 'HUAWEI', model: 'SGT-AL50', software: 'HarmonyOS 6.0',
+				lenses: ANDROID_LENSES(
+					{ e35: 24, m: 'SGT-AL50 back main camera 6.9mm f/1.4', f: 6.9, a: 1.4 },
+					{ e35: 13, m: 'SGT-AL50 back wide camera 2.2mm f/2.2', f: 2.2, a: 2.2 },
+					{ e35: 18, m: 'SGT-AL50 front camera 2.4mm f/2.0', f: 2.4, a: 2.0 })
+			},
+			{
 				label: 'Mate 60 Pro', make: 'HUAWEI', model: 'ALN-AL00', software: 'HarmonyOS 4.0',
 				lenses: ANDROID_LENSES(
 					{ m: 'ALN-AL00 back main camera 6.72mm f/1.4', f: 6.72, a: 1.4 },
@@ -111,6 +126,13 @@ export const DEVICE_PRESETS = [
 		brand: '小米',
 		items: [
 			{
+				label: '小米 17 Pro', make: 'Xiaomi', model: '25098PN5AC', software: 'HyperOS 3',
+				lenses: ANDROID_LENSES(
+					{ e35: 23, m: 'xiaomi 25098PN5AC back main camera 6.6mm f/1.7', f: 6.6, a: 1.7 },
+					{ e35: 17, m: 'xiaomi 25098PN5AC back wide camera 2.4mm f/2.4', f: 2.4, a: 2.4 },
+					{ e35: 21, m: 'xiaomi 25098PN5AC front camera 3.0mm f/2.2', f: 3.0, a: 2.2 })
+			},
+			{
 				label: '小米 14 Pro', make: 'Xiaomi', model: '23116PN5BC', software: 'HyperOS',
 				lenses: ANDROID_LENSES(
 					{ m: 'xiaomi 23116PN5BC back main camera 8.7mm f/1.42', f: 8.7, a: 1.42 },
@@ -129,6 +151,22 @@ export const DEVICE_PRESETS = [
 	{
 		brand: '其它',
 		items: [
+			{
+				// 国行 V2502A，另有海外型号 V2514
+				label: 'vivo X300 Pro', make: 'vivo', model: 'V2502A', software: 'OriginOS 6',
+				lenses: ANDROID_LENSES(
+					{ e35: 24, m: 'V2502A back main camera 8.7mm f/1.6', f: 8.7, a: 1.6 },
+					{ e35: 15, m: 'V2502A back wide camera 2.3mm f/2.0', f: 2.3, a: 2.0 },
+					{ e35: 20, m: 'V2502A front camera 3.0mm f/2.0', f: 3.0, a: 2.0 })
+			},
+			{
+				// 国行 PLG110，海外版 CPH2791
+				label: 'OPPO Find X9 Pro', make: 'OPPO', model: 'PLG110', software: 'ColorOS 16',
+				lenses: ANDROID_LENSES(
+					{ e35: 23, m: 'PLG110 back main camera 7.0mm f/1.5', f: 7.0, a: 1.5 },
+					{ e35: 15, m: 'PLG110 back wide camera 2.2mm f/2.0', f: 2.2, a: 2.0 },
+					{ e35: 21, m: 'PLG110 front camera 3.0mm f/2.0', f: 3.0, a: 2.0 })
+			},
 			{
 				label: 'vivo X100 Pro', make: 'vivo', model: 'V2309A', software: 'OriginOS 4',
 				lenses: ANDROID_LENSES(
