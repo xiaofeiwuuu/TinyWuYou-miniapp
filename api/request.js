@@ -102,12 +102,18 @@ async function request(options, retried = {}) {
 				console.error(`[Request] 密钥交换失败 (尝试 ${retryCount}/2):`, error)
 
 				if (retryCount >= 2) {
-					console.error('[Request] 密钥交换最终失败，请求将不加密')
+					// 不再 break 之后以明文继续发。
+					//
+					// 原来这里只打一行日志就放行，请求会带着明文 body 发出去。
+					// 服务端确实会以 400「请求数据必须加密传输」拒绝，
+					// 但那时敏感数据已经离开设备、进过网络了 —— 拒绝发生在收到之后，
+					// 拦不住已经发生的泄露。真正的防线只能在发出之前。
+					console.error('[Request] 密钥交换最终失败，中止请求')
 					uni.showToast({
-						title: '密钥交换失败',
+						title: '安全连接建立失败，请重试',
 						icon: 'none'
 					})
-					break
+					throw new Error('密钥交换失败，已中止请求')
 				}
 
 				// 交换失败,清除旧 clientId 和密钥重试
@@ -136,6 +142,16 @@ async function request(options, retried = {}) {
 	//
 	// 注意：这里原来只加密不签名，而服务端对所有非 GET 请求都要求
 	// x-timestamp / x-signature —— 下载、收藏、签到、兑换全都会被拒。
+	// 需要加密却没有密钥，直接中止。
+	//
+	// 原来的条件是 `needEncrypt && aesKey && ...`：aesKey 为空时整个加密段落
+	// 被静默跳过，请求照发不误，而且连一行日志都没有。
+	// 这是最隐蔽的一条降级路径——密钥交换成功过、后来密钥被清掉的场景就会走到这里。
+	if (needEncrypt && !aesKey && method !== 'GET') {
+		console.error('[Request] 需要加密但本地无密钥，中止请求')
+		throw new Error('缺少加密密钥，已中止请求')
+	}
+
 	if (needEncrypt && aesKey && method !== 'GET') {
 		try {
 			const timestamp = Date.now().toString()
@@ -163,7 +179,11 @@ async function request(options, retried = {}) {
 				aesKey
 			})
 		} catch (error) {
-			console.error('[Request] 加密或签名失败:', error)
+			// 不吞异常。原来 catch 之后什么都不做，函数继续往下走，
+			// requestData 还是那份**未加密的原始对象**，签名头也没设上，
+			// 于是明文连同业务数据一起发了出去。
+			console.error('[Request] 加密或签名失败，中止请求:', error)
+			throw new Error('请求加密失败，已中止请求')
 		}
 	}
 
