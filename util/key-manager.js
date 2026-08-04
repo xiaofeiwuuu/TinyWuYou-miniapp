@@ -120,9 +120,13 @@ class KeyManager {
 			}
 			this.serverPublicKey = publicKeyData.publicKey
 
-			// 步骤 2: 用服务端随机数 + 本机熵派生 AES 密钥 (256-bit)。
-			// 小程序运行时没有 crypto.getRandomValues，纯本地生成的密钥是可预测的。
-			const aesKey = CryptoUtil.deriveAesKey(publicKeyData.serverRandom)
+			// 步骤 2: 派生 AES 密钥 (256-bit)。
+			// 先取一段 wx.getRandomValues 的 CSPRNG 真随机（从不离开设备），
+			// 和服务端随机数、本机熵一起派生。这样即使 serverRandom 明文泄露、
+			// 本机熵可预测，没有这段设备本地随机数也算不出密钥。
+			// 老基础库拿不到时返回 null，deriveAesKey 会自动降级。
+			const secureRandom = await CryptoUtil.getSecureRandomHex(32)
+			const aesKey = CryptoUtil.deriveAesKey(publicKeyData.serverRandom, secureRandom)
 
 			// 步骤 3: 用服务端公钥加密
 			const encryptedAesKey = CryptoUtil.rsaEncrypt(aesKey, this.serverPublicKey)

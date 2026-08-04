@@ -163,24 +163,73 @@ export class CryptoUtil {
 	}
 
 	/**
+	 * 取一段密码学安全的随机数（hex）。
+	 *
+	 * 微信基础库 2.15.0+ 提供 wx.getRandomValues —— 真正的 CSPRNG。
+	 * crypto.js 里那句"小程序运行时没有 crypto.getRandomValues"是老注释，
+	 * 当年确实没有，现在有了（只是 API 名字不同、且是异步的）。
+	 *
+	 * 拿不到时返回 null，由调用方决定降级：deriveAesKey 在没有它时
+	 * 仍然能用 serverRandom + 本机熵派生，不比改动前差。
+	 *
+	 * 异步没关系：只在密钥交换时调用一次，不在每次请求的加密热路径上。
+	 */
+	static getSecureRandomHex(byteLength = 32) {
+		return new Promise((resolve) => {
+			try {
+				if (typeof wx !== 'undefined' && typeof wx.getRandomValues === 'function') {
+					wx.getRandomValues({
+						length: byteLength,
+						success: (res) => {
+							try {
+								const bytes = new Uint8Array(res.randomValues)
+								let hex = ''
+								for (let i = 0; i < bytes.length; i++) {
+									hex += bytes[i].toString(16).padStart(2, '0')
+								}
+								resolve(hex)
+							} catch (e) {
+								resolve(null)
+							}
+						},
+						fail: () => resolve(null)
+					})
+					return
+				}
+			} catch (e) {
+				// 落到下面返回 null
+			}
+			resolve(null)
+		})
+	}
+
+	/**
 	 * 派生 AES 密钥 (256-bit / 32 bytes)，返回 64 位 hex 字符串。
 	 *
-	 * 原来是 64 次 Math.random() 逐位取 hex —— 整把 AES-256 密钥只有
-	 * Math.random 的熵，可以从少量输出还原内部状态进而预测密钥。
+	 * 熵有三个来源，按重要性排：
+	 *   1. secureRandom —— wx.getRandomValues 的 CSPRNG 输出。**从不离开设备、
+	 *      不经网络**，所以哪怕攻击者抓到 /auth/public-key 拿到明文 serverRandom、
+	 *      又能预测所有本机熵，也算不出密钥。这是真正的机密材料。
+	 *   2. serverRandom —— 服务端 CSPRNG，随公钥接口下发。它明文可见（在 TLS 内），
+	 *      单独依赖它是不够的，但混进来能防"本机熵完全可预测"的退化情况。
+	 *   3. collectLocalEntropy —— 本机熵，低质量，只作补充。
 	 *
-	 * 现在由服务端随机数（服务端有真正的 CSPRNG，随公钥接口一起下发）
-	 * 与本机熵一起派生：即使本机这部分完全可预测，攻击者也拿不到
-	 * 通过 TLS 单独发给该客户端的那段服务端随机数。
+	 * secureRandom 为 null（老基础库/非微信端）时自动降级为原来的
+	 * serverRandom + 本机熵方案，不比改动前差。
 	 *
 	 * @param {string} serverRandom /auth/public-key 返回的 serverRandom
+	 * @param {string|null} secureRandom getSecureRandomHex() 的返回值
 	 */
-	static deriveAesKey(serverRandom) {
+	static deriveAesKey(serverRandom, secureRandom) {
 		if (!serverRandom || serverRandom.length < 32) {
 			throw new Error('服务端随机数缺失，无法安全派生密钥')
 		}
 
-		const material = `${serverRandom}|${this.collectLocalEntropy()}`
-		return CryptoJS.SHA256(material).toString(CryptoJS.enc.Hex)
+		const parts = [serverRandom, this.collectLocalEntropy()]
+		if (secureRandom) {
+			parts.push(secureRandom)
+		}
+		return CryptoJS.SHA256(parts.join('|')).toString(CryptoJS.enc.Hex)
 	}
 
 	/**
