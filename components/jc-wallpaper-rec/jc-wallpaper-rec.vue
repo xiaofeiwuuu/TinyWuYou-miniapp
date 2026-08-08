@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<view class="fu-m-t-30" v-for="(item, index) in list" :key="item.id || index">
-			<jc-section :title="item.title" @click="$openPage({name: item.url, query: item})"></jc-section>
+			<jc-section :title="item.title" :subtitle="item.subtitle" :emphasize="true" @click="$openPage({name: item.url, query: item})"></jc-section>
 
 			<jc-wallpaper-scr
 				:list="item.images || []"
@@ -26,15 +26,6 @@
 	const categoryStore = useCategoryStore();
 	const imageTypeStore = useImageTypeStore();
 
-	// 首页各区块的标题。展示模式不再写死，改由后端配置的朝向决定
-	const TYPE_CONFIG = {
-		avatar: { title: '头像百变' },
-		wallpaper: { title: '手机壁纸' },
-		pc_wallpaper: { title: '电脑壁纸' },
-		emoji: { title: '表情包' },
-		sticker: { title: '精美贴纸' }
-	};
-
 	/**
 	 * 朝向 → 横向滚动条的展示模式与比例。
 	 * 五个列表页已经合并成一个 imageList，这里同样按朝向取布局，
@@ -52,14 +43,12 @@
 
 		const result = [];
 		/**
-		 * 类型与顺序都以后端配置为准（已按 sortOrder 排好），不再写死数组。
-		 * 后台新增类型时首页会自动多一块，不需要发版。
-		 * TYPE_CONFIG 只保留运营文案，取不到就退回后台配的类型名。
+		 * 类型、顺序、标题、副标题全部以后端「图片类型」配置为准（已按 sortOrder 排好），
+		 * 不再写死。后台改类型名 / 加类型，首页自动跟着变，不需要发版。
 		 */
 		imageTypeStore.types.forEach(type => {
 			const imageType = type.code;
 			const images = categoryStore.recommendData[imageType]; // 直接是图片数组
-			const config = TYPE_CONFIG[imageType] || { title: type.name };
 
 			// 如果该类型有图片，添加到结果中
 			if (images && images.length > 0) {
@@ -67,7 +56,10 @@
 				const scroll = SCROLL_BY_ORIENTATION[orientation] || SCROLL_BY_ORIENTATION.square;
 				result.push({
 					id: imageType, // 使用类型名作为 ID
-					title: config.title,
+					// 标题用后台配的类型名
+					title: type.name,
+					// 副标题用后台图片类型里配的文案（imageTypeStore 已带 subtitle 字段）
+					subtitle: type.subtitle || '',
 					type: imageType,
 					mode: scroll.mode,
 					ratioW: scroll.ratioW,

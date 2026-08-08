@@ -1,0 +1,2 @@
+patchedDependencies:
+  uview-plus@3.8.86: patches/uview-plus@3.8.86.patch

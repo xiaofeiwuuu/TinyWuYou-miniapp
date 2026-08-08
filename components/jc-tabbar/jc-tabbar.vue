@@ -152,7 +152,11 @@
 			height: 100%;
 			bottom: 0;
 			left: 0;
-			background-color: #302F36;
+			// 磨砂黑：半透明黑 + 背后模糊（毛玻璃）。blur 在部分安卓/开发者工具可能不生效，
+			// 届时降级为半透明黑，观感仍是深色，可接受
+			background-color: rgba(0, 0, 0, 0.6);
+			backdrop-filter: blur(20px);
+			-webkit-backdrop-filter: blur(20px);
 			-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 61.5'%3E%3Cpath d='M100 0H0c32.9 0 49.3 61.5 100 61.5S167.1 0 200 0H100z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
 			-webkit-mask-size: auto 64rpx, cover;
 			-webkit-mask-repeat: no-repeat;

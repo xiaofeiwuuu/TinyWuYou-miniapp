@@ -53,7 +53,19 @@ export function uncollectImage(imageId) {
 }
 
 /**
- * 下载图片 (扣除下载次数,VIP不扣)
+ * 下载预检（点击下载时先调）：只校验能不能下（VIP/次数/每日上限），不扣次数。
+ * @param {number} imageId - 图片ID
+ */
+export function precheckDownload(imageId) {
+	return request({
+		url: '/user/download/precheck',
+		method: 'POST',
+		data: { imageId }
+	})
+}
+
+/**
+ * 确认下载（图片保存到相册成功后才调）：此时才扣次数、累加下载量。
  * @param {number} imageId - 图片ID
  */
 export function downloadImage(imageId) {

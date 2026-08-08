@@ -43,12 +43,12 @@
 <style scoped lang="scss">
 	.question-card {
 		background: rgba(255, 255, 255, 0.05);
-		backdrop-filter: blur(10rpx);
-		border: 2rpx solid rgba(255, 255, 255, 0.1);
+		// backdrop-filter: blur(10rpx);
+		// border: 2rpx solid rgba(255, 255, 255, 0.1);
 		transition: all 0.3s ease;
 
 		&:active {
-			background: rgba(255, 255, 255, 0.08);
+			// background: rgba(255, 255, 255, 0.08);
 		}
 	}
 

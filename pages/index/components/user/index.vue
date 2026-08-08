@@ -346,20 +346,14 @@
 }
 
 // 广告容器
+// 不加固定高度和背景色：广告没拉到时容器就 0 高、什么都不显示，不会留一块空盒子；
+// 广告回来后自然撑开。
 .ad-container {
 	border-radius: 15rpx;
 	margin: 40rpx auto;
 	display: flex;
 	justify-content: center;
-	/**
-	 * 原生模板广告是异步拉取的，容器原来没有高度：
-	 * 广告没回来时这块是 0 高，回来后突然撑开，下面的内容整体往下跳；
-	 * 广告拉取失败时又只剩一个悬空的静音图标。
-	 * 给一个最小高度占住位置，加载中就是一块纯色区域，不会跳版。
-	 */
-	min-height: 200rpx;
 	align-items: center;
 	overflow: hidden;
-	background-color: rgba(255, 255, 255, 0.03);
 }
 </style>

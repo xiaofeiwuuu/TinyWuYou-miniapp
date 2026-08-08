@@ -166,11 +166,13 @@
 				success: async () => {
 					$u.toast('复制成功');
 
-					// 调用后端记录复制
+					// 上报后端「复制了一次」用于统计。这一步失败必须静默：
+					// 剪贴板此时已经写入成功、也提示过「复制成功」，
+					// 再弹「复制失败」会让用户以为没复制到，反而误导。
 					try {
 						await copyText(data.value.id);
 					} catch (error) {
-						console.error('[TextDetails] 记录复制失败:', error);
+						console.error('[TextDetails] 记录复制失败（不影响用户，已静默）:', error);
 					}
 				},
 				fail: (err) => {

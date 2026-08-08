@@ -24,6 +24,9 @@
 						<slot :data="item" />
 					</view>
 				</view>
+				<!-- 末尾占位块：小程序 scroll-view 横滑时，末尾的 margin/padding 都不计入可滚动宽度，
+				     只有一个有实际宽度的元素才能撑出右边距，让最后一张图不贴边 -->
+				<view v-if="displayList.length" :style="{ width: $u.addUnit(props.margin), flexShrink: 0 }"></view>
 			</view>
 		</scroll-view>
 	</view>
@@ -95,14 +98,8 @@
 	let width = ref(0);
 	let height = ref(0);
 
-	// 计算属性 - 显示列表（如果没有传入 list，显示 10 个占位图）
-	const displayList = computed(() => {
-		if (props.list && props.list.length > 0) {
-			return props.list
-		}
-		// 没有数据时，返回 10 个占位对象
-		return Array.from({ length: 10 }, (_, index) => ({ index }))
-	})
+	// 显示列表：空就不渲染。原来空时铺 10 个占位(key=index)，真实数据(key=id)到达后节点全量重建，微信端报 parent not found
+	const displayList = computed(() => props.list || [])
 	
 	// 生命周期
 	onMounted(() => {

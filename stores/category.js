@@ -1,18 +1,26 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getImageCategories, getRecommendCategories } from '@/api/category.js'
+import { readCache, writeCache, removeCache } from '@/util/storage-cache.js'
+
+// 缓存 key（带版本号，结构变了就升版本让旧缓存失效）
+const CATEGORIES_KEY = 'imageCategories:v1'
+const RECOMMEND_KEY = 'recommendImages:v1'
 
 /**
  * 分类数据 Store
  * 管理所有分类数据和推荐数据，避免重复请求
  */
 export const useCategoryStore = defineStore('category', () => {
-	// 状态
-	const categories = ref(null) // 原始分类数据 { avatar: [], wallpaper: [], text: [], ... }
-	const recommendData = ref(null) // 推荐数据 { avatar: [images], wallpaper: [images], ... }
+	// 状态（冷启动先用本地缓存垫上，页面立即有数据，避免白屏）
+	const categories = ref(readCache(CATEGORIES_KEY)) // 原始分类数据 { avatar: [], wallpaper: [], text: [], ... }
+	const recommendData = ref(readCache(RECOMMEND_KEY)) // 推荐数据 { avatar: [images], wallpaper: [images], ... }
 	const loading = ref(false)
 	const recommendLoading = ref(false)
 	const error = ref(null)
+	// 本次运行是否已从线上刷新过（缓存 hydrate 不算，只是先垫着，仍需 revalidate）
+	let categoriesRevalidated = false
+	let recommendRevalidated = false
 
 	// 计算属性 - 壁纸分类列表（用于 tabs）
 	const wallpaperList = computed(() => {
@@ -58,17 +66,18 @@ export const useCategoryStore = defineStore('category', () => {
 	const isLoaded = computed(() => categories.value !== null)
 	const isRecommendLoaded = computed(() => recommendData.value !== null)
 
-	// 获取推荐数据
+	// 获取推荐数据（SWR：有缓存先用、后台刷新；无缓存才等线上）
 	const fetchRecommendData = async (force = false) => {
-		// 如果已经有数据且不是强制刷新，直接返回
-		if (isRecommendLoaded.value && !force) {
-			console.log('[CategoryStore] 使用推荐数据缓存')
+		// 本次已从线上刷新过，直接用内存
+		if (recommendRevalidated && !force) {
 			return recommendData.value
 		}
 
-		// 如果正在加载，等待加载完成
+		const hasCache = recommendData.value !== null
+
+		// 已有请求在飞：有缓存就不等（那次会更新），无缓存才轮询等它
 		if (recommendLoading.value) {
-			console.log('[CategoryStore] 等待推荐数据加载完成...')
+			if (hasCache && !force) return recommendData.value
 			let waitCount = 0
 			while (recommendLoading.value && waitCount < 100) {
 				await new Promise(resolve => setTimeout(resolve, 100))
@@ -79,42 +88,45 @@ export const useCategoryStore = defineStore('category', () => {
 
 		recommendLoading.value = true
 
-		try {
-			console.log('[CategoryStore] 开始获取推荐数据')
-			const res = await getRecommendCategories()
-
-			if (res.code === 0) {
-				recommendData.value = res.data
-				console.log('[CategoryStore] ✅ 推荐数据加载成功')
-				console.log('[CategoryStore] - avatar:', res.data.avatar?.length || 0)
-				console.log('[CategoryStore] - wallpaper:', res.data.wallpaper?.length || 0)
-				console.log('[CategoryStore] - pc_wallpaper:', res.data.pc_wallpaper?.length || 0)
-				console.log('[CategoryStore] - emoji:', res.data.emoji?.length || 0)
-				console.log('[CategoryStore] - sticker:', res.data.sticker?.length || 0)
-				return recommendData.value
-			} else {
-				throw new Error(res.message || '获取推荐数据失败')
+		const task = (async () => {
+			try {
+				console.log('[CategoryStore] 开始获取推荐数据')
+				const res = await getRecommendCategories()
+				if (res.code === 0) {
+					recommendData.value = res.data
+					recommendRevalidated = true
+					writeCache(RECOMMEND_KEY, res.data) // 回写缓存供下次冷启动用
+					console.log('[CategoryStore] ✅ 推荐数据加载成功')
+				} else {
+					throw new Error(res.message || '获取推荐数据失败')
+				}
+			} catch (err) {
+				console.error('[CategoryStore] ❌ 获取推荐数据失败:', err)
+				// 有缓存兜底就不抛（用旧数据先顶着）；无缓存才把错误抛给页面
+				if (!hasCache) throw err
+			} finally {
+				recommendLoading.value = false
 			}
-		} catch (err) {
-			console.error('[CategoryStore] ❌ 获取推荐数据失败:', err)
-			throw err
-		} finally {
-			recommendLoading.value = false
-		}
+		})()
+
+		// SWR：有缓存立即返回，刷新在后台跑；无缓存则等这次
+		if (hasCache && !force) return recommendData.value
+		await task
+		return recommendData.value
 	}
 
-	// 获取分类数据
+	// 获取分类数据（SWR：有缓存先用、后台刷新；无缓存才等线上）
 	const fetchCategories = async (force = false) => {
-		// 如果已经有数据且不是强制刷新，直接返回
-		if (isLoaded.value && !force) {
-			console.log('[CategoryStore] 使用缓存数据')
+		// 本次已从线上刷新过，直接用内存
+		if (categoriesRevalidated && !force) {
 			return categories.value
 		}
 
-		// 如果正在加载，等待加载完成
+		const hasCache = categories.value !== null
+
+		// 已有请求在飞：有缓存就不等（那次会更新），无缓存才轮询等它
 		if (loading.value) {
-			console.log('[CategoryStore] 等待加载完成...')
-			// 轮询等待加载完成（最多等待10秒）
+			if (hasCache && !force) return categories.value
 			let waitCount = 0
 			while (loading.value && waitCount < 100) {
 				await new Promise(resolve => setTimeout(resolve, 100))
@@ -126,34 +138,44 @@ export const useCategoryStore = defineStore('category', () => {
 		loading.value = true
 		error.value = null
 
-		try {
-			console.log('[CategoryStore] 开始获取分类数据')
-			const res = await getImageCategories()
-
-			if (res.code === 0) {
-				categories.value = res.data
-				console.log('[CategoryStore] ✅ 分类数据加载成功')
-				console.log('[CategoryStore] - 头像分类:', res.data.avatar?.length || 0)
-				console.log('[CategoryStore] - 壁纸分类:', res.data.wallpaper?.length || 0)
-				return categories.value
-			} else {
-				throw new Error(res.message || '获取分类失败')
+		const task = (async () => {
+			try {
+				console.log('[CategoryStore] 开始获取分类数据')
+				const res = await getImageCategories()
+				if (res.code === 0) {
+					categories.value = res.data
+					categoriesRevalidated = true
+					writeCache(CATEGORIES_KEY, res.data) // 回写缓存供下次冷启动用
+					console.log('[CategoryStore] ✅ 分类数据加载成功')
+				} else {
+					throw new Error(res.message || '获取分类失败')
+				}
+			} catch (err) {
+				console.error('[CategoryStore] ❌ 获取分类失败:', err)
+				error.value = err.message || '获取分类失败'
+				// 有缓存兜底就不抛（用旧数据先顶着）；无缓存才把错误抛给页面
+				if (!hasCache) throw err
+			} finally {
+				loading.value = false
 			}
-		} catch (err) {
-			console.error('[CategoryStore] ❌ 获取分类失败:', err)
-			error.value = err.message || '获取分类失败'
-			throw err
-		} finally {
-			loading.value = false
-		}
+		})()
+
+		// SWR：有缓存立即返回，刷新在后台跑；无缓存则等这次
+		if (hasCache && !force) return categories.value
+		await task
+		return categories.value
 	}
 
-	// 清除缓存
+	// 清除缓存（含本地持久缓存），下次会重新从线上拉
 	const clearCache = () => {
 		console.log('[CategoryStore] 清除所有缓存')
 		categories.value = null
 		recommendData.value = null
 		error.value = null
+		categoriesRevalidated = false
+		recommendRevalidated = false
+		removeCache(CATEGORIES_KEY)
+		removeCache(RECOMMEND_KEY)
 	}
 
 	// 根据 ID 查找分类

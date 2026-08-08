@@ -26,7 +26,9 @@ const FALLBACK = {
 	logo: '',
 	contact: { wechat: '', email: '', workTime: '' },
 	faq: [],
-	announcement: { enabled: false }
+	announcement: { enabled: false },
+	// 每日下载上限：普通用户 / VIP，0 = 不限制。与后端 system_config 默认值一致
+	downloadLimits: { normal: 20, vip: 0 }
 }
 
 export const useAppInfoStore = defineStore('appInfo', () => {
@@ -56,6 +58,18 @@ export const useAppInfoStore = defineStore('appInfo', () => {
 
 	/** 后台没配 FAQ 时返回空数组，页面自己显示空态，不要塞一份写死的兜底内容 */
 	const faq = computed(() => (Array.isArray(info.value.faq) ? info.value.faq : []))
+
+	/**
+	 * 普通用户 / VIP 每日下载上限。0 表示不限制。
+	 * 页面据此展示会员权益（如「普通 20 次/天，VIP 不限」）。
+	 */
+	const downloadLimits = computed(() => {
+		const dl = info.value.downloadLimits || {}
+		return {
+			normal: Number(dl.normal) || 0,
+			vip: Number(dl.vip) || 0
+		}
+	})
 
 	/** 是否配了任意一项联系方式，页面据此决定要不要显示那一块 */
 	const hasContact = computed(() => {
@@ -135,6 +149,7 @@ export const useAppInfoStore = defineStore('appInfo', () => {
 		contact,
 		hasContact,
 		faq,
+		downloadLimits,
 		pendingAnnouncement,
 		markAnnouncementSeen,
 		fetchInfo

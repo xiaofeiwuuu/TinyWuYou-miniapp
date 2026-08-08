@@ -30,16 +30,25 @@
 				</view>
 			</button>
 			
+			<!-- #ifdef MP -->
+			<!-- 小程序：open-type="share" 点击直接触发页面 onShareAppMessage 弹分享面板，
+			     不能用 JS 主动调起转发，所以这里不走 @click -->
+			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('share')" open-type="share">
+				<up-icon name="share-square" :color="iconColor" :size="iconSize"></up-icon>
+			</button>
+			<!-- #endif -->
+			<!-- #ifndef MP -->
 			<button class="wallpaper-btn-box__block fu-reset-button" v-if="handleVisible('share')" @click="onClick('share')">
 				<up-icon name="share-square" :color="iconColor" :size="iconSize"></up-icon>
 			</button>
+			<!-- #endif -->
 		</view>
 	</view>
 </template>
 
 <script setup>
 	import { ref, reactive, getCurrentInstance, watch, onUnmounted } from 'vue';
-	import { collectImage, uncollectImage, downloadImage } from '@/api/user.js';
+	import { collectImage, uncollectImage, downloadImage, precheckDownload } from '@/api/user.js';
 	import { useUserStore } from '@/stores/user.js';
 	import { useAdStore } from '@/stores/ad.js';
 
@@ -90,6 +99,9 @@
 			default: false
 		}
 	});
+
+	// 下载/收藏/取消收藏成功后，通知父组件刷新计数
+	const emit = defineEmits(['refresh']);
 
 	// data数据
 	const { $u, $mUtil, $openPage } = getCurrentInstance().appContext.config.globalProperties;
@@ -242,6 +254,8 @@
 				} else {
 					await uncollectImage(props.data.id)
 				}
+				// 收藏数（及后端据此算的热度）已变，通知详情页刷新计数
+				emit('refresh')
 				return next ? '收藏成功' : '已取消收藏'
 			} catch (error) {
 				console.error('[Wallpaper Btn] 收藏操作失败:', error)
@@ -281,13 +295,11 @@
 		 * 保存到相册还在进行时遮罩就没了。
 		 */
 		await runExclusive('download', async () => {
-			// 1. 先记录下载。这一步会扣一次下载次数，
-			//    VIP 专属 / 次数不足都在这里被拒，失败就不该再去下载文件
+			// 1. 预检：能不能下（VIP 专属 / 次数 / 每日上限），只校验、不扣次数
 			try {
-				await downloadImage(props.data.id)
+				await precheckDownload(props.data.id)
 			} catch (error) {
-				console.error('[Wallpaper Btn] 下载失败:', error)
-				return error.message || '下载失败'
+				return error.message || '暂时无法下载'
 			}
 
 			// 2. 下载图片到本地
@@ -300,19 +312,12 @@
 				console.error('[Wallpaper Btn] 下载文件失败:', err)
 				return '下载失败, 请稍后再试~'
 			}
-
 			if (res.statusCode !== 200) {
 				console.error('[Wallpaper Btn] 下载失败, statusCode:', res.statusCode)
 				return '下载失败, 请稍后再试~'
 			}
 
-			// 3. 保存到相册
-			// #ifdef H5
-			uni.previewImage({
-				urls: [res.tempFilePath]
-			})
-			// #endif
-
+			// 3. 保存到相册。保存失败 / 用户取消 → 直接返回，绝不记账（不扣次数、不加下载量）
 			// #ifndef H5
 			const isVideo = /\.mp4$/i.test(res.tempFilePath)
 			try {
@@ -323,32 +328,43 @@
 						uni.saveImageToPhotosAlbum({ filePath: res.tempFilePath, success: resolve, fail: reject })
 					}
 				})
-				// 刷新用户信息(更新下载次数)
-				userStore.refreshUserInfo()
-				// 显示插屏广告
-				showInterstitialAdIfNeeded()
-				return '保存成功！'
 			} catch (err) {
+				const msg = (err && err.errMsg) || ''
+				// 用户主动取消：不是失败，给个轻提示即可（也不记账）
+				if (msg.includes('cancel')) {
+					return '已取消保存'
+				}
 				console.error('[Wallpaper Btn] 保存失败:', err)
-				return `保存失败：${err.errMsg || '请检查相册权限'}`
+				// 相册权限被拒：引导去设置里开
+				if (msg.includes('auth') || msg.includes('deny')) {
+					return '请在设置里开启保存到相册的权限'
+				}
+				return '保存失败，请稍后再试'
 			}
 			// #endif
+			// #ifdef H5
+			uni.previewImage({ urls: [res.tempFilePath] })
+			// #endif
+
+			// 4. 到这一步图片才真正到手 → 确认记账：扣次数 + 图片下载量+1。
+			//    记账失败不影响用户（图已保存），只告警；宁可少扣也不误扣。
+			try {
+				await downloadImage(props.data.id)
+				emit('refresh')
+			} catch (err) {
+				console.warn('[Wallpaper Btn] 下载记账失败（用户已保存成功，不影响）:', err)
+			}
+
+			// 刷新用户信息(更新下载次数) + 插屏广告
+			userStore.refreshUserInfo()
+			// showInterstitialAdIfNeeded()
+			return '保存成功！'
 		}, { title: '保存中...' })
 	};
 
-	// 分享
+	// 分享（仅非小程序端走这里；小程序端由 <button open-type="share"> 直接触发转发，不经 onClick）
 	const onShare = () => {
-		// #ifdef MP-WEIXIN
-		uni.showShareMenu({
-			withShareTicket: true,
-			menus: ['shareAppMessage', 'shareTimeline']
-		})
-		$u.toast('请点击右上角分享')
-		// #endif
-
-		// #ifndef MP-WEIXIN
 		$u.toast('当前平台暂不支持分享功能')
-		// #endif
 	}
 	
 	// 检查按钮是否显示

@@ -26,7 +26,6 @@ export default {
 	defaultAvatar: PATH + 'logo.png',
 	
 	// 素材
-	banner: PATH + 'img/banner.png',
 	mobile: PATH + 'img/mobile.jpeg',
 	mobile1: PATH + 'img/mobile1.jpeg',
 	mobile2: PATH + 'img/mobile2.jpeg',

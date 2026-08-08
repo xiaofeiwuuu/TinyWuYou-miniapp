@@ -48,7 +48,7 @@ export default {
 				"pagePath": "index" // 跳转路径Name
 			},
 			{
-				"text": "文案",
+				"text": "分类",
 				"iconPath": $mAssetsPath.tabBarClassify,
 				"selectedIconPath": $mAssetsPath.tabBarClassify1,
 				"pagePath": "classify"

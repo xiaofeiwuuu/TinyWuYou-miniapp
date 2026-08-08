@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  uview-plus@3.8.86:
+    hash: 40432ab014048c07c60f55b68749ef34d29d964ad1872b8af6f79ba56e1f7ae9
+    path: patches/uview-plus@3.8.86.patch
+
 importers:
 
   .:
@@ -11,15 +16,12 @@ importers:
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
-      node-forge:
-        specifier: ^1.4.0
-        version: 1.4.0
       pinia:
         specifier: ^3.0.3
         version: 3.0.3(vue@3.5.22)
       uview-plus:
         specifier: ^3.8.86
-        version: 3.8.86
+        version: 3.8.86(patch_hash=40432ab014048c07c60f55b68749ef34d29d964ad1872b8af6f79ba56e1f7ae9)
 
 packages:
 
@@ -118,10 +120,6 @@ packages:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
-
-  node-forge@1.4.0:
-    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
-    engines: {node: '>= 6.13.0'}
 
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
@@ -284,8 +282,6 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  node-forge@1.4.0: {}
-
   perfect-debounce@1.0.0: {}
 
   picocolors@1.1.1: {}
@@ -311,7 +307,7 @@ snapshots:
     dependencies:
       copy-anything: 3.0.5
 
-  uview-plus@3.8.86: {}
+  uview-plus@3.8.86(patch_hash=40432ab014048c07c60f55b68749ef34d29d964ad1872b8af6f79ba56e1f7ae9): {}
 
   vue@3.5.22:
     dependencies:

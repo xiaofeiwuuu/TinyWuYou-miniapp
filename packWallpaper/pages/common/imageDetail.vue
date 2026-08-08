@@ -13,7 +13,13 @@
 
 		<jc-date />
 
-		<jc-wallpaper-btn :data="data" :isCollected="isCollected" :visibleBtn="FULLSCREEN_BTN" />
+		<view class="detail-stats detail-stats--float">
+			<text class="detail-stats__item">热度 {{ data.hotScore || 0 }}</text>
+			<text class="detail-stats__item">下载 {{ data.downloadCount || 0 }}</text>
+			<text class="detail-stats__item">收藏 {{ data.collectCount || 0 }}</text>
+		</view>
+
+		<jc-wallpaper-btn :data="data" :isCollected="isCollected" :visibleBtn="FULLSCREEN_BTN" @refresh="refreshStats" />
 	</view>
 
 	<!-- 横图 / 方图：卡片式，带自定义导航栏 -->
@@ -27,7 +33,13 @@
 				<view v-if="data.isVip" class="vip-badge">VIP</view>
 			</view>
 
-			<jc-wallpaper-btn :data="data" :isCollected="isCollected" bgColor="rgba(255, 255, 255, 0.1)" :visibleBtn="FULLSCREEN_BTN" />
+			<view class="detail-stats detail-stats--float">
+				<text class="detail-stats__item">热度 {{ data.hotScore || 0 }}</text>
+				<text class="detail-stats__item">下载 {{ data.downloadCount || 0 }}</text>
+				<text class="detail-stats__item">收藏 {{ data.collectCount || 0 }}</text>
+			</view>
+
+			<jc-wallpaper-btn :data="data" :isCollected="isCollected" bgColor="rgba(255, 255, 255, 0.1)" :visibleBtn="FULLSCREEN_BTN" @refresh="refreshStats" />
 		</view>
 
 		<!-- 方图：小卡片 + 推荐九宫格 -->
@@ -37,7 +49,13 @@
 				<view v-if="data.isVip" class="vip-badge">VIP</view>
 			</view>
 
-			<jc-wallpaper-btn bgColor="rgba(255, 255, 255, 0.1)" :data="data" :isCollected="isCollected" :visibleBtn="CARD_BTN" :fixed="false" />
+			<jc-wallpaper-btn bgColor="rgba(255, 255, 255, 0.1)" :data="data" :isCollected="isCollected" :visibleBtn="CARD_BTN" :fixed="false" @refresh="refreshStats" />
+
+			<view class="detail-stats fu-m-t-30">
+				<text class="detail-stats__item">热度 {{ data.hotScore || 0 }}</text>
+				<text class="detail-stats__item">下载 {{ data.downloadCount || 0 }}</text>
+				<text class="detail-stats__item">收藏 {{ data.collectCount || 0 }}</text>
+			</view>
 
 			<view v-if="recommendList.length" class="fu-m-t-30">
 				<jc-section :title="`推荐${typeName}`" :showRight="false" />
@@ -67,7 +85,9 @@
 	 */
 	import { getCurrentInstance, ref, computed } from 'vue';
 	import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-	import { getImageDetail, getRecommendImages } from '@/packWallpaper/api/image.js';
+	import { getImageDetail } from '@/packWallpaper/api/image.js';
+	// 随机推荐接口在主包（分包可以引用主包）
+	import { getRandomImages } from '@/api/image.js';
 	import { checkCollected } from '@/api/user.js';
 	import { useImageTypeStore } from '@/stores/imageType.js';
 
@@ -185,13 +205,19 @@
 		}
 	};
 
-	// 加载推荐列表
+	// 加载推荐列表（随机，每次进不同图/重进都换一批）
 	const loadRecommendList = async () => {
 		try {
-			const res = await getRecommendImages(imageType.value, RECOMMEND_LIMIT);
+			// 多取一张：过滤掉当前正在看的这张后仍够 RECOMMEND_LIMIT
+			const res = await getRandomImages({
+				imageType: imageType.value,
+				limit: RECOMMEND_LIMIT + 1
+			});
 
 			if (res.code === 0) {
-				const images = res.data || [];
+				const images = (res.data || [])
+					.filter(img => img.id !== data.value.id)
+					.slice(0, RECOMMEND_LIMIT);
 				recommendList.value = images.map(img => ({
 					id: img.id,
 					image: img.thumbnailUrl || img.imageUrl,
@@ -223,6 +249,21 @@
 			query: { imageId: item.id, type: imageType.value },
 			type: 'redirectTo'
 		});
+	};
+
+	// 下载/收藏/取消收藏后刷新计数：重新拉详情（热度由后端算，本地加减不准）
+	const refreshStats = async () => {
+		if (!data.value.id) return;
+		try {
+			const res = await getImageDetail(data.value.id);
+			if (res.code === 0 && res.data) {
+				data.value.hotScore = res.data.hotScore;
+				data.value.downloadCount = res.data.downloadCount;
+				data.value.collectCount = res.data.collectCount;
+			}
+		} catch (error) {
+			console.error('[ImageDetail] 刷新计数失败:', error);
+		}
 	};
 
 	// 分享给好友
@@ -272,6 +313,25 @@
 			border-radius: 15rpx;
 			margin: 50rpx auto;
 			position: relative;
+		}
+	}
+
+	// 热度/下载/收藏 统计
+	.detail-stats {
+		display: flex;
+		justify-content: center;
+		gap: 48rpx;
+		color: #ffffff;
+		font-size: 24rpx;
+
+		// 竖图/横图整屏图上：浮在底部按钮条上方，加投影保证在亮图上也可读
+		&--float {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 160rpx;
+			z-index: 5;
+			text-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.6);
 		}
 	}
 

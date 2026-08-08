@@ -104,7 +104,7 @@
 }
 
 .menu-card {
-	background: rgba(255, 255, 255, 0.05);
+	// background: rgba(255, 255, 255, 0.05);
 	backdrop-filter: blur(10rpx);
 	border: 2rpx solid rgba(255, 255, 255, 0.1);
 	border-radius: 20rpx;

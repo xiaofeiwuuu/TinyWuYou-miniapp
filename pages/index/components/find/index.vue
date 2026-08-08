@@ -17,10 +17,11 @@
 							<view class="fu-font-36 fu-line-1 font-family">{{ item.name || '' }}</view>
 							<view class="fu-font-24 fu-m-t-10 fu-line-2">{{ item.description || '' }}</view>
 						</view>
-						<up-button shape="round" :customStyle="{width: '160rpx', background: 'rgba(255, 255, 255, 0.15)', border: 'none', padding: '10rpx 20rpx', height: 'auto'}" @click.stop="navigateToMiniProgram(item)"><text style="font-size: 26rpx; font-weight: 500; color: #ffffff;">立即查看</text></up-button>
+						<up-button shape="round" :customStyle="{alignSelf: 'flex-start', width: '160rpx', background: 'rgba(255, 255, 255, 0.15)', border: 'none', padding: '10rpx 20rpx', height: 'auto'}" @click.stop="navigateToMiniProgram(item)"><text style="font-size: 26rpx; font-weight: 500; color: #ffffff;">立即查看</text></up-button>
 					</view>
 				</view>
 			</view>
+
 
 			<!-- 任务列表 -->
 			<view class="task-section">
@@ -52,9 +53,7 @@
 						<view class="task-item__action">
 							<!-- 邀请任务使用分享按钮 -->
 							<button v-if="task.taskType === 'invite' && !task.isCompleted && !isTaskDisabled(task.taskType)" class="task-item__share-btn" open-type="share">
-								<view class="task-item__gold-btn">
-									<text class="task-item__gold-btn-text">{{ getTaskButtonText(task.taskType) }}</text>
-								</view>
+								<text class="task-item__gold-btn-text">{{ getTaskButtonText(task.taskType) }}</text>
 							</button>
 							<!-- 其他任务普通按钮 -->
 							<view v-else-if="!task.isCompleted && !isTaskDisabled(task.taskType)" class="task-item__gold-btn" @click="handleTaskClick(task)">
@@ -72,7 +71,6 @@
 				</view>
 			</view>
 
-			<jc-loading-more :loadingType="queryParams.loadingType" />
 		</view>
 	</view>
 </template>
@@ -734,16 +732,29 @@
 		}
 	}
 
-	// 分享按钮 (清除原生样式)
+	// 邀请任务的按钮必须用 <button open-type="share"> 才能触发分享。
+	// 微信 button 自带默认样式(min-height / padding / 18px 字号 / 1px 边框)很顽固，
+	// 借 .task-item__gold-btn 混着写压不干净，所以这里直接把金色按钮外观 + button 重置
+	// 全写在一处，尺寸(padding/字号/圆角)和 .task-item__gold-btn 完全一致。
 	.task-item__share-btn {
-		background: transparent;
-		border: none;
-		padding: 0;
+		// 金色按钮外观（和 .task-item__gold-btn 保持一致）
+		display: inline-flex;
+		align-items: center;
+		padding: 10rpx 30rpx;
+		background: rgba(255, 215, 0, 0.2);
+		border: 2rpx solid rgba(255, 215, 0, 0.3);
+		border-radius: 28rpx;
+		white-space: nowrap;
+		box-sizing: border-box;
+		// 重置 button 默认，消除尺寸差异
 		margin: 0;
+		min-height: 0;
+		height: auto;
 		line-height: 1;
+		font-size: 24rpx;
 
 		&::after {
-			border: none;
+			border: none; // 清 button 默认的 1px 边框
 		}
 	}
 

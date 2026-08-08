@@ -1,24 +1,24 @@
 {
-    "name": "TinyWuYou-壁纸",
-    "appid": "__UNI__GF0AE5EB",
-    "description": "",
-    "versionName": "5.2.0",
-    "versionCode": "100",
-    "transformPx": false,
-    "app-plus": {
-        "usingComponents": true,
-        "nvueStyleCompiler": "uni-app",
-        "compilerVersion": 3,
-        "splashscreen": {
-            "alwaysShowBeforeRender": true,
-            "waiting": true,
-            "autoclose": true,
-            "delay": 0
+    "name" : "TinyWuYou-壁纸",
+    "appid" : "__UNI__GF0AE5EB",
+    "description" : "",
+    "versionName" : "5.2.0",
+    "versionCode" : "100",
+    "transformPx" : false,
+    "app-plus" : {
+        "usingComponents" : true,
+        "nvueStyleCompiler" : "uni-app",
+        "compilerVersion" : 3,
+        "splashscreen" : {
+            "alwaysShowBeforeRender" : true,
+            "waiting" : true,
+            "autoclose" : true,
+            "delay" : 0
         },
-        "modules": {},
-        "distribute": {
-            "android": {
-                "permissions": [
+        "modules" : {},
+        "distribute" : {
+            "android" : {
+                "permissions" : [
                     "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
                     "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
@@ -36,26 +36,26 @@
                     "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
                 ]
             },
-            "ios": {},
-            "sdkConfigs": {}
+            "ios" : {},
+            "sdkConfigs" : {}
         }
     },
-    "quickapp": {},
-    "mp-weixin": {
-        "appid": "wx5b7ed17627e3f259",
-        "setting": {
-            "urlCheck": false,
-            "minified": true,
-            "es6": true,
-            "postcss": true
+    "quickapp" : {},
+    "mp-weixin" : {
+        "appid" : "wx5b7ed17627e3f259",
+        "setting" : {
+            "urlCheck" : false,
+            "minified" : true,
+            "es6" : true,
+            "postcss" : true
         },
-        "usingComponents": true
+        "usingComponents" : true
     },
-    "uniStatistics": {
-        "enable": false
+    "uniStatistics" : {
+        "enable" : false
     },
-    "vueVersion": "3",
-    "h5": {
-        "template": "template.h5.html"
+    "vueVersion" : "3",
+    "h5" : {
+        "template" : "template.h5.html"
     }
 }

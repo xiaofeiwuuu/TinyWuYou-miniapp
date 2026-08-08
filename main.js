@@ -2,6 +2,8 @@ import App from './App'
 
 // 引入全局uview-plus
 import uviewPlus from 'uview-plus'
+// 图标字体改用内联 base64，替代 at.alicdn.com 外网字体
+import { UICON_FONT } from '@/config/uicon-font.js'
 
 // 引入项目内路由封装
 import router from '@/util/router.js'
@@ -47,7 +49,9 @@ export function createApp() {
 		   * uni.loadFontFace 本身带 global: true，在小程序里注册一次即可全局生效，
 		   * 重复注册没有任何收益。
 		   */
-		  loadFontOnce: true
+		  loadFontOnce: true,
+		  // 图标字体走内联 base64，不再从 at.alicdn.com 外网加载
+		  iconUrl: UICON_FONT
 	  }
   });
   app.config.globalProperties.$mAssetsPath = $mAssetsPath;
