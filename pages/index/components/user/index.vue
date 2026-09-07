@@ -46,8 +46,12 @@
 					<view class="info-item fu-flex-1">
 						<up-text text="剩余下载" color="#999999" size="24rpx" />
 						<view class="fu-m-t-10 fu-flex fu-flex-column-center">
-							<up-text :text="`${userInfo.downloadCount}`" color="#ffffff" size="40rpx" bold />
-							<up-text text=" 次" color="#999999" size="24rpx" />
+							<!-- VIP 无限下载，直接显示「无限」；非 VIP 显示剩余次数 -->
+							<up-text v-if="userInfo.isVip === 1" text="无限" color="#ffffff" size="40rpx" bold />
+							<template v-else>
+								<up-text :text="`${userInfo.downloadCount}`" color="#ffffff" size="40rpx" bold />
+								<up-text text=" 次" color="#999999" size="24rpx" />
+							</template>
 						</view>
 					</view>
 
@@ -72,6 +76,15 @@
 				</view>
 			</view>
 			
+			<!-- 开通/续费会员入口 -->
+			<view class="vip-entry" @click="goPurchase">
+				<view class="vip-entry__left">
+					<text class="vip-entry__title">{{ userInfo.isVip === 1 ? '续费 VIP 会员' : '开通 VIP 会员' }}</text>
+					<text class="vip-entry__sub">无限下载 · 免广告 · 专属壁纸</text>
+				</view>
+				<view class="vip-entry__btn"><text class="vip-entry__btn-text">{{ userInfo.isVip === 1 ? '去续费' : '去开通' }}</text></view>
+			</view>
+
 			<!--
 				四个入口。
 
@@ -128,8 +141,8 @@
 				</view>
 			</view>
 
-			<!-- 原生模板广告 -->
-			<view v-if="adStore.adConfig.nativeTemplateId" class="ad-container fu-m-t-40">
+			<!-- 原生模板广告：VIP 免广告，不展示 -->
+			<view v-if="adStore.adConfig.nativeTemplateId && userInfo.isVip !== 1" class="ad-container fu-m-t-40">
 				<ad-custom :unit-id="adStore.adConfig.nativeTemplateId" ad-intervals="30" />
 			</view>
 		</view>
@@ -260,6 +273,11 @@
 		$openPage('userProfile')
 	}
 
+	// 打开会员购买页
+	const goPurchase = () => {
+		$openPage('vipPurchase')
+	}
+
 	const onClick = (state, e) => {
 		switch(state) {
 			case 'userRestEntrys':
@@ -308,6 +326,43 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+}
+
+.vip-entry {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 30rpx;
+	padding: 28rpx 32rpx;
+	border-radius: 16rpx;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1rpx solid rgba(255, 255, 255, 0.1);
+
+	&__title {
+		display: block;
+		font-size: 30rpx;
+		font-weight: bold;
+		color: #ffffff;
+	}
+
+	&__sub {
+		display: block;
+		font-size: 22rpx;
+		color: #a2a7b2;
+		margin-top: 8rpx;
+	}
+
+	&__btn {
+		background: #ffffff;
+		border-radius: 30rpx;
+		padding: 12rpx 32rpx;
+	}
+
+	&__btn-text {
+		font-size: 26rpx;
+		font-weight: bold;
+		color: #0b0d16;
 	}
 }
 
