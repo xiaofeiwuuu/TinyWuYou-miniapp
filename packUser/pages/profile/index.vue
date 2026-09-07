@@ -41,7 +41,7 @@
 			<view class="fu-m-t-60">
 				<up-button
 					:disabled="!canSave"
-					color="linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+					color="#ffffff"
 					shape="round"
 					:customStyle="{ height: '88rpx' }"
 					@click="onSave"
@@ -90,7 +90,7 @@
 				<view class="picker__footer">
 					<up-button
 						:disabled="!pickedId"
-						color="linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+						color="#ffffff"
 						shape="round"
 						:customStyle="{ height: '80rpx' }"
 						@click="confirmPick"
