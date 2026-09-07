@@ -2,15 +2,6 @@
 	<view class="fu-p-b-80">
 		<app-nav-bar bgColor="transparent" :border="false" fixed />
 
-		<!-- 账号封禁提示：被后台禁用后，个人中心顶部给出明确说明 -->
-		<view v-if="isBanned" class="ban-banner fu-m-x-30 fu-m-b-20">
-			<up-icon name="error-circle-fill" color="#ff4d4f" size="36rpx" />
-			<view class="ban-banner__text">
-				<up-text text="账号已被封禁" color="#ff4d4f" size="28rpx" bold />
-				<up-text :text="bannedMsg || '如有疑问请联系客服'" color="#ffb3b3" size="22rpx" margin="6rpx 0 0 0" />
-			</view>
-		</view>
-
 		<view class="fu-m-x-30">
 			<!-- 基础信息 -->
 			<view class=" fu-flex fu-flex-column-center">
@@ -30,6 +21,10 @@
 							<view v-if="userInfo.isVip === 1" class="vip-badge fu-m-l-10">
 								<up-text text="VIP" color="#FFD700" size="20rpx" bold />
 							</view>
+							<!-- 封禁标识 -->
+							<view v-if="isBanned" class="ban-badge fu-m-l-10">
+								<up-text text="已封禁" color="#ff4d4f" size="20rpx" bold />
+							</view>
 						</view>
 						<view class="fu-flex fu-flex-column-center fu-m-t-10">
 							<!--
@@ -39,6 +34,10 @@
 							-->
 							<up-text :text="`Uid：${userInfo.uid || '--'}`" color="#cccccc" size="24rpx" margin="0 10rpx 0 0" bold />
 							<up-icon name="file-text" color="#55aaff" size="28rpx" @click="onCopyUid" />
+						</view>
+						<!-- 封禁说明：紧跟在 uid 下方，红色小字 -->
+						<view v-if="isBanned" class="fu-m-t-5">
+							<up-text :text="bannedMsg || '账号已被封禁，如有疑问请联系客服'" color="#ff4d4f" size="20rpx" />
 						</view>
 					</view>
 				</view>
@@ -107,7 +106,7 @@
 				改成一行 flex：每格 flex: 1 等分，格内 column + center 居中，
 				居中由结构保证，没有任何条件编译分支。
 			-->
-			<view class="entry-grid fu-border fu-bg-main fu-b-r-10 fu-m-t-60">
+			<view class="entry-grid fu-border fu-bg-main fu-b-r-10 fu-m-t-30">
 				<view
 					v-for="(item, index) in $mConstDataConfig.userEntrys"
 					:key="index"
@@ -412,19 +411,11 @@
 	box-shadow: 0 2rpx 8rpx rgba(255, 215, 0, 0.3);
 }
 
-.ban-banner {
-	display: flex;
-	align-items: center;
-	padding: 20rpx 24rpx;
-	border-radius: 16rpx;
-	background: rgba(255, 77, 79, 0.12);
-	border: 1rpx solid rgba(255, 77, 79, 0.4);
-
-	&__text {
-		display: flex;
-		flex-direction: column;
-		margin-left: 16rpx;
-	}
+.ban-badge {
+	padding: 4rpx 12rpx;
+	border-radius: 8rpx;
+	background: rgba(255, 77, 79, 0.15);
+	border: 1rpx solid rgba(255, 77, 79, 0.5);
 }
 
 .info-card {
