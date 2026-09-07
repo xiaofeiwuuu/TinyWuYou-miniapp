@@ -179,7 +179,6 @@
 		avatarUrl: $mAssetsPath.defaultAvatar,
 		id: '',
 		downloadCount: 0,
-		userLevel: 1,
 		isVip: 0,
 		vipExpireTime: null,
 	});
