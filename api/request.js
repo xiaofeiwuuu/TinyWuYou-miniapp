@@ -202,17 +202,14 @@ async function request(options, retried = {}) {
 			data: requestData,
 			header: headers,
 			success: (res) => {
-				// 处理 401 未授权 (token 失效)：静默重新登录后自动重试原请求，
-				// 用户无感。原来是清空登录态 + 提示"请重新打开小程序"，
-				// 而小程序随时能拿到新 code，完全没必要把这个负担丢给用户。
 				// 账号被封禁：后端专门返回 403 + banned 标记，和 401（token 失效）区分开。
-				// 封禁不能走静默重登（重登也会被拒），要清登录态、打标记、广播事件，
-				// 让个人中心给出明确的封禁提示。用状态码 + banned 字段精确识别，不靠匹配文案。
+				// 关键：不要删 token。带着有效 token 的请求会被后端直接判成 403 banned，
+				// 前端当场识别即可；一旦删了 token，后续请求变成"没登录"的 401，
+				// 反而会去静默重登，绕一大圈还误报"登录失败"。
+				// 只打标记 + 广播事件，让个人中心给出封禁提示。
 				if (res.statusCode === 403 && res.data && res.data.banned) {
 					const banMsg = (res.data.message || res.data.error) || '账号已被封禁'
 					console.warn('[Response] 账号已被封禁:', banMsg)
-					uni.removeStorageSync('token')
-					uni.removeStorageSync('userInfo')
 					uni.setStorageSync('account_banned', banMsg)
 					uni.$emit('account:banned', banMsg)
 					const error = new Error(banMsg)
@@ -222,7 +219,20 @@ async function request(options, retried = {}) {
 					return
 				}
 
+				// 处理 401 未授权 (token 失效)：静默重新登录后自动重试原请求，
+				// 用户无感。原来是清空登录态 + 提示"请重新打开小程序"，
+				// 而小程序随时能拿到新 code，完全没必要把这个负担丢给用户。
 				if (res.statusCode === 401) {
+					// 已知被封禁就别再尝试重登了（wx-login 也会被 403 拒），直接按封禁返回
+					const bannedFlag = uni.getStorageSync('account_banned')
+					if (bannedFlag) {
+						uni.$emit('account:banned', bannedFlag)
+						const error = new Error(bannedFlag)
+						error.banned = true
+						reject(error)
+						return
+					}
+
 					// 登录接口自己 401 就别再套娃了
 					if (retried.auth || url.includes('/auth/wx-login')) {
 						console.error('[Response] 重新登录后仍然 401，放弃')
@@ -249,6 +259,12 @@ async function request(options, retried = {}) {
 						.then(() => request(options, { ...retried, auth: true }))
 						.then(resolve)
 						.catch((error) => {
+							// 封禁导致的重登失败：已经通过 account:banned 事件给出提示，
+							// 不要再弹"登录失败，请稍后重试"（那会盖掉真正的封禁原因）
+							if (error && error.banned) {
+								reject(error)
+								return
+							}
 							console.error('[Response] 静默重新登录失败:', error)
 							uni.removeStorageSync('token')
 							uni.removeStorageSync('userInfo')
