@@ -135,12 +135,18 @@
 				},
 				fail: (err) => {
 					console.error('[VipPurchase] requestVirtualPayment 失败:', err);
-					const msg = err && err.errMsg ? err.errMsg : '';
-					if (msg.includes('cancel')) {
+					const rawMsg = err && err.errMsg ? err.errMsg : '';
+					// 不同基础库取消的返回不一：errMsg 可能是 'fail cancel'，也可能带 errno/errCode。
+					// 统一转小写匹配 cancel，尽量把"用户主动取消"识别出来给轻提示。
+					const canceled =
+						rawMsg.toLowerCase().includes('cancel') ||
+						err?.errno === 1 ||
+						err?.errCode === 1;
+					if (canceled) {
 						uni.showToast({ title: '已取消支付', icon: 'none' });
 					} else {
 						// 真机上把微信返回的原始错误显示出来，便于排查（如未开通/基础库过低）
-						uni.showModal({ title: '支付未完成', content: msg || '未知错误', showCancel: false });
+						uni.showModal({ title: '支付未完成', content: rawMsg || '未知错误', showCancel: false });
 					}
 				},
 				complete: () => {
