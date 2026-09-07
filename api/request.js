@@ -60,6 +60,8 @@ function silentRelogin() {
 			if (res.data.userInfo) {
 				uni.setStorageSync('userInfo', JSON.stringify(res.data.userInfo))
 			}
+			// 登录成功说明账号未被封禁（或已被解封），清掉可能残留的封禁标记
+			uni.removeStorageSync('account_banned')
 			console.log('[Auth] 静默重新登录成功')
 			return res.data.accessToken
 		} finally {
@@ -203,6 +205,23 @@ async function request(options, retried = {}) {
 				// 处理 401 未授权 (token 失效)：静默重新登录后自动重试原请求，
 				// 用户无感。原来是清空登录态 + 提示"请重新打开小程序"，
 				// 而小程序随时能拿到新 code，完全没必要把这个负担丢给用户。
+				// 账号被封禁：后端专门返回 403 + banned 标记，和 401（token 失效）区分开。
+				// 封禁不能走静默重登（重登也会被拒），要清登录态、打标记、广播事件，
+				// 让个人中心给出明确的封禁提示。用状态码 + banned 字段精确识别，不靠匹配文案。
+				if (res.statusCode === 403 && res.data && res.data.banned) {
+					const banMsg = (res.data.message || res.data.error) || '账号已被封禁'
+					console.warn('[Response] 账号已被封禁:', banMsg)
+					uni.removeStorageSync('token')
+					uni.removeStorageSync('userInfo')
+					uni.setStorageSync('account_banned', banMsg)
+					uni.$emit('account:banned', banMsg)
+					const error = new Error(banMsg)
+					error.statusCode = 403
+					error.banned = true
+					reject(error)
+					return
+				}
+
 				if (res.statusCode === 401) {
 					// 登录接口自己 401 就别再套娃了
 					if (retried.auth || url.includes('/auth/wx-login')) {

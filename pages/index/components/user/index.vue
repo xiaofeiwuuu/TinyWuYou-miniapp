@@ -1,7 +1,16 @@
 <template>
 	<view class="fu-p-b-80">
 		<app-nav-bar bgColor="transparent" :border="false" fixed />
-		
+
+		<!-- 账号封禁提示：被后台禁用后，个人中心顶部给出明确说明 -->
+		<view v-if="isBanned" class="ban-banner fu-m-x-30 fu-m-b-20">
+			<up-icon name="error-circle-fill" color="#ff4d4f" size="36rpx" />
+			<view class="ban-banner__text">
+				<up-text text="账号已被封禁" color="#ff4d4f" size="28rpx" bold />
+				<up-text :text="bannedMsg || '如有疑问请联系客服'" color="#ffb3b3" size="22rpx" margin="6rpx 0 0 0" />
+			</view>
+		</view>
+
 		<view class="fu-m-x-30">
 			<!-- 基础信息 -->
 			<view class=" fu-flex fu-flex-column-center">
@@ -150,7 +159,7 @@
 </template>
 
 <script setup>
-	import { getCurrentInstance, computed, onMounted, watch } from 'vue';
+	import { getCurrentInstance, computed, onMounted, onUnmounted, ref, watch } from 'vue';
 	import { useUserStore } from '@/stores/user.js';
 	import { useAdStore } from '@/stores/ad.js';
 
@@ -167,6 +176,28 @@
 
 	// 使用 user store
 	const userStore = useUserStore();
+
+	// 账号封禁状态：请求层检测到 403 banned 会广播 account:banned，
+	// 同时写入 storage 标记（供进入页面时读取）。这里据此展示封禁提示。
+	const isBanned = ref(false);
+	const bannedMsg = ref('');
+	let bannedModalShown = false;
+
+	const markBanned = (msg) => {
+		isBanned.value = true;
+		bannedMsg.value = msg || '账号已被封禁，如有疑问请联系客服';
+		if (!bannedModalShown) {
+			bannedModalShown = true;
+			uni.showModal({
+				title: '账号已被封禁',
+				content: bannedMsg.value,
+				showCancel: false,
+				confirmText: '我知道了',
+			});
+		}
+	};
+
+	const onAccountBanned = (msg) => markBanned(msg);
 
 	// 使用 ad store
 	const adStore = useAdStore();
@@ -242,7 +273,16 @@
 	// 组件首次挂载时获取用户信息
 	onMounted(async () => {
 		console.log('[User] 组件挂载,开始加载用户信息');
+		// 进入页面先读一次封禁标记（可能是别的接口先触发的）
+		const banned = uni.getStorageSync('account_banned');
+		if (banned) markBanned(banned);
+		// 监听请求层广播的封禁事件
+		uni.$on('account:banned', onAccountBanned);
 		await refreshUserInfo();
+	});
+
+	onUnmounted(() => {
+		uni.$off('account:banned', onAccountBanned);
 	});
 
 	// 监听 isActive 变化,当组件变为激活状态时刷新数据
@@ -370,6 +410,21 @@
 	padding: 4rpx 12rpx;
 	border-radius: 8rpx;
 	box-shadow: 0 2rpx 8rpx rgba(255, 215, 0, 0.3);
+}
+
+.ban-banner {
+	display: flex;
+	align-items: center;
+	padding: 20rpx 24rpx;
+	border-radius: 16rpx;
+	background: rgba(255, 77, 79, 0.12);
+	border: 1rpx solid rgba(255, 77, 79, 0.4);
+
+	&__text {
+		display: flex;
+		flex-direction: column;
+		margin-left: 16rpx;
+	}
 }
 
 .info-card {

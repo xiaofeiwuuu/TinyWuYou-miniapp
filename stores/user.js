@@ -105,6 +105,8 @@ export const useUserStore = defineStore('user', () => {
 
 				// 更新缓存
 				uni.setStorageSync('userInfo', JSON.stringify(res.data))
+				// 能成功拿到用户信息说明没被封禁（或已解封），清掉封禁标记
+				uni.removeStorageSync('account_banned')
 				console.log('[UserStore] ✅ 用户信息更新成功')
 				console.log('[UserStore] - VIP状态:', userInfo.value.isVip === 1 ? 'VIP' : '普通用户')
 				console.log('[UserStore] - 下载次数:', userInfo.value.downloadCount)
