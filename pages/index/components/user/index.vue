@@ -177,23 +177,14 @@
 	const userStore = useUserStore();
 
 	// 账号封禁状态：请求层检测到 403 banned 会广播 account:banned，
-	// 同时写入 storage 标记（供进入页面时读取）。这里据此展示封禁提示。
+	// 同时写入 storage 标记（供进入页面时读取）。这里只负责页面上的「已封禁」标记，
+	// 全局弹窗由 App.vue 统一处理，避免多处重复弹。
 	const isBanned = ref(false);
 	const bannedMsg = ref('');
-	let bannedModalShown = false;
 
 	const markBanned = (msg) => {
 		isBanned.value = true;
 		bannedMsg.value = msg || '账号已被封禁，如有疑问请联系客服';
-		if (!bannedModalShown) {
-			bannedModalShown = true;
-			uni.showModal({
-				title: '账号已被封禁',
-				content: bannedMsg.value,
-				showCancel: false,
-				confirmText: '我知道了',
-			});
-		}
 	};
 
 	const onAccountBanned = (msg) => markBanned(msg);

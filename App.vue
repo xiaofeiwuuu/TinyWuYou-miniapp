@@ -3,6 +3,9 @@
 	import { useUserStore } from '@/stores/user.js'
 	import { getPlatform } from '@/util/platform.js'
 
+	// 全局只弹一次封禁提示，避免多个接口同时 403 时弹一堆
+	let banModalShown = false
+
 	export default {
 		globalData: {
 			hasAutoLogin: false // 标记是否已经自动登录过
@@ -12,6 +15,13 @@
 			// 初始化用户 store (从缓存加载)
 			const userStore = useUserStore()
 			userStore.loadFromCache()
+
+			// 全局监听封禁事件：任意页面的请求被判成 403 banned 都会广播过来，
+			// 在这里统一弹一次提示，而不是只在个人中心才提示。
+			uni.$on('account:banned', (msg) => this.showBanModal(msg))
+			// 冷启动时若上次已被封禁，直接提示（可能这次还没发请求）
+			const bannedFlag = uni.getStorageSync('account_banned')
+			if (bannedFlag) this.showBanModal(bannedFlag)
 
 			// 尝试自动登录
 			await this.tryAutoLogin(options)
@@ -52,6 +62,20 @@
 		},
 
 		methods: {
+			/**
+			 * 全局封禁提示：整个 App 生命周期内只弹一次。
+			 */
+			showBanModal(msg) {
+				if (banModalShown) return
+				banModalShown = true
+				uni.showModal({
+					title: '账号已被封禁',
+					content: msg || '账号已被封禁，如有疑问请联系客服',
+					showCancel: false,
+					confirmText: '我知道了',
+				})
+			},
+
 			/**
 			 * 尝试自动登录
 			 */
