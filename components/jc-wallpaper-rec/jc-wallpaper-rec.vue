@@ -47,6 +47,9 @@
 		 * 不再写死。后台改类型名 / 加类型，首页自动跟着变，不需要发版。
 		 */
 		imageTypeStore.types.forEach(type => {
+			// 勾了「分类页展示」(showInCategory=1) 的类型只在「分类」页出现，首页不再重复展示
+			if (Number(type.showInCategory) === 1) return;
+
 			const imageType = type.code;
 			const images = categoryStore.recommendData[imageType]; // 直接是图片数组
 

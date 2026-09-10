@@ -179,7 +179,9 @@
 				isVip: imgData.isVip,
 				hotScore: imgData.hotScore,
 				downloadCount: imgData.downloadCount,
-				collectCount: imgData.collectCount
+				collectCount: imgData.collectCount,
+				// 情侣头像等成对图片：搭档图的精简信息，推荐位加载时插到最前面
+				pairImage: imgData.pairImage || null
 			};
 
 			await loadCollectionStatus(imageId);
@@ -215,16 +217,28 @@
 			});
 
 			if (res.code === 0) {
+				const pair = data.value.pairImage;
 				const images = (res.data || [])
-					.filter(img => img.id !== data.value.id)
-					.slice(0, RECOMMEND_LIMIT);
-				recommendList.value = images.map(img => ({
+					.filter(img => img.id !== data.value.id && (!pair || img.id !== pair.id))
+					.slice(0, pair ? RECOMMEND_LIMIT - 1 : RECOMMEND_LIMIT);
+				const list = images.map(img => ({
 					id: img.id,
 					image: img.thumbnailUrl || img.imageUrl,
 					imageUrl: img.imageUrl,
 					title: img.title,
 					isVip: img.isVip
 				}));
+				// 情侣头像：搭档图固定放在推荐位第一个
+				if (pair) {
+					list.unshift({
+						id: pair.id,
+						image: pair.thumbnailUrl || pair.imageUrl,
+						imageUrl: pair.imageUrl,
+						title: pair.title,
+						isVip: pair.isVip
+					});
+				}
+				recommendList.value = list;
 			}
 		} catch (error) {
 			console.error('[ImageDetail] 加载推荐列表异常:', error);
