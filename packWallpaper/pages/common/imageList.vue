@@ -22,19 +22,24 @@
 					virtual：列表会随下拉不断累加，几万张图的分类里节点会线性增长到卡顿。
 					等高网格可以精确算出可视行，只渲染窗口内的格子，节点数恒定。
 				-->
-				<jc-grid
-					:list="list"
-					:column="grid.column"
-					:multiple="grid.multiple"
-					virtual
-					:scroll-top="scrollTop"
-					@click="handleImageClick"
-				/>
+				<view id="il-grid">
+					<jc-grid
+						:list="list"
+						:column="grid.column"
+						:multiple="grid.multiple"
+						virtual
+						:scroll-top="scrollTop"
+						@click="handleImageClick"
+					/>
+				</view>
 				<jc-loading-more :loadingType="queryParams.loadingType" />
 			</template>
 		</view>
 		<view v-if="showBackTop" class="back-top" @click="backToTop">
 			<up-icon name="arrow-upward" color="#ffffff" :size="20"></up-icon>
+			<!-- 当前页 / 总页数（总页数拿不到时只显示当前页） -->
+			<text v-if="totalPages > 0" class="back-top__page">{{ currentPage }}/{{ totalPages }}</text>
+			<text v-else class="back-top__page">{{ currentPage }}</text>
 		</view>
 	</page-layout>
 </template>
@@ -101,6 +106,30 @@
 		pageSize: $mConstDataConfig.pageSize,
 		loadingType: 0,
 		loadMore: true
+	});
+
+	// 分页显示：总条数（后端返回）与实测单行高度，用来在「回到顶部」按钮上显示 当前页/总页数
+	let totalCount = ref(0);
+	let rowHeightPx = ref(0);
+
+	const totalPages = computed(() => {
+		const size = queryParams.value.pageSize || 1;
+		return totalCount.value > 0 ? Math.ceil(totalCount.value / size) : 0;
+	});
+
+	// 当前页：按滚动高度换算——顶部可视行 = scrollTop / 行高，再换算成第几张、第几页。
+	// 行高等高，实测一次即可；拿不到行高时退回「已加载到第几页」。
+	const currentPage = computed(() => {
+		const size = queryParams.value.pageSize || 1;
+		const col = grid.value.column || 1;
+		if (rowHeightPx.value > 0) {
+			const topRow = Math.floor(scrollTop.value / rowHeightPx.value);
+			const topIndex = topRow * col; // 顶部可视图片在 list 中的序号
+			let p = Math.floor(topIndex / size) + 1;
+			if (totalPages.value > 0) p = Math.min(p, totalPages.value);
+			return Math.max(1, p);
+		}
+		return queryParams.value.pageNum;
 	});
 
 	// 生命周期
@@ -194,6 +223,22 @@
 	 * 页面级 onReachBottom 只有在页面能滚动时才会触发；首屏图太少（如 4 列 × 5 行 = 20 张）
 	 * 撑不满一屏就永远滚不到底、加载不了后续。这里测量内容底部是否还在可视区内，是则再拉一页。
 	 */
+	// 实测单行高度：#il-grid 是等高虚拟网格，整体高度 / 行数 = 行高。
+	// 内容越多测得越准；用于把 scrollTop 换算成「当前第几页」。
+	const measureRowHeight = () => {
+		setTimeout(() => {
+			const col = grid.value.column || 1;
+			const rows = Math.ceil(list.value.length / col);
+			if (rows <= 0) return;
+			uni.createSelectorQuery()
+				.select('#il-grid')
+				.boundingClientRect((rect) => {
+					if (rect && rect.height > 0) rowHeightPx.value = rect.height / rows;
+				})
+				.exec();
+		}, 300);
+	};
+
 	const autoFillScreen = () => {
 		if (!queryParams.value.loadMore) return;
 		setTimeout(() => {
@@ -232,6 +277,8 @@
 			});
 
 			if (res.code === 0) {
+				// 总条数（用于算总页数）；后端未返回时保持原值
+				if (typeof res.data.total === 'number') totalCount.value = res.data.total;
 				const newData = res.data.list || [];
 
 				const formattedData = newData.map(img => ({
@@ -248,6 +295,9 @@
 				list.value = queryParams.value.pageNum === 1
 					? formattedData
 					: list.value.concat(formattedData);
+
+				// 实测单行高度（等高，测一次即可，用于按滚动位置算当前页）
+				measureRowHeight();
 
 				// 判断是否还有更多数据
 				if (formattedData.length < queryParams.value.pageSize) {
@@ -296,9 +346,17 @@
 		background-color: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(10px);
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		z-index: 100;
+
+		&__page {
+			margin-top: 2rpx;
+			font-size: 18rpx;
+			line-height: 1;
+			color: rgba(255, 255, 255, 0.85);
+		}
 	}
 
 	:deep(.app-nav-bar-text) {
