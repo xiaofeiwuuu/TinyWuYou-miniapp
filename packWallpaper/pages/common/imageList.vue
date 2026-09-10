@@ -340,9 +340,10 @@
 		position: fixed;
 		right: 30rpx;
 		bottom: 120rpx;
-		width: 80rpx;
-		height: 80rpx;
-		border-radius: 50%;
+		// 竖向胶囊：窄宽 + 上下全圆角，箭头在上、页码在下
+		width: 64rpx;
+		padding: 18rpx 0;
+		border-radius: 32rpx;
 		background-color: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(10px);
 		display: flex;
@@ -352,7 +353,12 @@
 		z-index: 100;
 
 		&__page {
-			margin-top: 2rpx;
+			margin-top: 8rpx;
+			padding-top: 8rpx;
+			// 与箭头之间一条细分隔线，胶囊层次更清晰
+			border-top: 1rpx solid rgba(255, 255, 255, 0.25);
+			width: 40rpx;
+			text-align: center;
 			font-size: 18rpx;
 			line-height: 1;
 			color: rgba(255, 255, 255, 0.85);
