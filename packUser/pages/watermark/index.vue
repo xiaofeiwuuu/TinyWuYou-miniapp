@@ -2,8 +2,9 @@
 	<view class="wm-page">
 		<app-nav-bar leftIcon="arrow-left" title="图片加水印" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
-		<!-- 预览区固定在导航栏正下方，永远不随页面滚动；调下方设置时始终可见效果 -->
-		<view class="wm-preview" :style="{ top: navTop + 'px' }">
+		<!-- 预览区在普通流里、不参与滚动（canvas 是原生组件，放进 fixed/sticky 里一滚动就会错位/丢内容）。
+		     页面本身不滚，只有下面的 scroll-view 内部滚动，预览就恒定不动。 -->
+		<view class="wm-preview">
 			<view v-if="!imgPath" class="wm-empty" @click="chooseImage">
 				<up-icon name="plus" color="#999999" :size="40"></up-icon>
 				<text class="wm-empty__t">点击选择图片</text>
@@ -11,9 +12,9 @@
 			<canvas type="2d" id="wmCanvas" class="wm-canvas" :style="canvasStyle"></canvas>
 		</view>
 
-		<!-- 占位：把面板顶下去，正好接在固定预览下方 -->
-		<view class="wm-body" :style="{ paddingTop: previewBoxH + 'px' }">
-			<view v-if="imgPath" class="wm-panel">
+		<!-- 控件区：只有这一块滚动，canvas 不受影响 -->
+		<scroll-view v-if="imgPath" scroll-y class="wm-scroll">
+			<view class="wm-panel">
 				<!-- 水印文字 -->
 				<view class="wm-row">
 					<text class="wm-label">水印文字</text>
@@ -122,7 +123,7 @@
 
 				<view class="wm-tip">水印在你的手机本地生成，不会上传服务器；设置会自动记住。</view>
 			</view>
-		</view>
+		</scroll-view>
 	</view>
 </template>
 
@@ -402,24 +403,28 @@
 </script>
 
 <style lang="scss" scoped>
+	// 整页占满视口且不滚动：导航占位 + 预览(不动) + 控件 scroll-view(内部滚动)
 	.wm-page {
-		min-height: 100vh;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 		background: #111111;
 	}
-	.wm-body {
-		padding: 20rpx 30rpx 60rpx;
-	}
 	.wm-preview {
-		position: fixed;
-		left: 0;
-		right: 0;
-		// top 由内联 style 按导航栏高度设置
-		z-index: 5; // 低于固定导航栏，高于滚动内容
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 16rpx 30rpx;
 		background: #111111;
+	}
+	// 控件滚动区：占满剩余高度，内部滚动
+	.wm-scroll {
+		flex: 1;
+		min-height: 0;
+		box-sizing: border-box;
+		padding: 4rpx 30rpx 60rpx;
 	}
 	.wm-empty {
 		width: 100%;
