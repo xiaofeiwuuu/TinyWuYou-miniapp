@@ -2,8 +2,8 @@
 	<view class="wm-page">
 		<app-nav-bar leftIcon="arrow-left" title="图片加水印" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
-		<view class="wm-body">
-			<!-- 预览区：canvas 直接当预览，导出的就是它 -->
+		<!-- 预览区吸顶固定：调下面的设置时也能一直看到水印效果 -->
+		<up-sticky :offsetTop="navTop" bgColor="#111111">
 			<view class="wm-preview">
 				<view v-if="!imgPath" class="wm-empty" @click="chooseImage">
 					<up-icon name="plus" color="#999999" :size="40"></up-icon>
@@ -11,7 +11,9 @@
 				</view>
 				<canvas type="2d" id="wmCanvas" class="wm-canvas" :style="canvasStyle"></canvas>
 			</view>
+		</up-sticky>
 
+		<view class="wm-body">
 			<view v-if="imgPath" class="wm-panel">
 				<!-- 水印文字 -->
 				<view class="wm-row">
@@ -170,10 +172,25 @@
 
 	let canvasNode = null;
 
+	// 屏幕尺寸 & 导航栏高度（吸顶偏移用）
+	const sysW = ref(375);
+	const sysH = ref(667);
+	const navTop = ref(64);
+
+	// 预览显示尺寸：等比缩放，同时受「面板宽度」和「最高 42% 屏高」约束，
+	// 保证竖图也不会占满整屏、下方设置能看见。
 	const canvasStyle = computed(() => {
 		if (!canvasW.value) return 'width:0;height:0;';
 		const ratio = canvasH.value / canvasW.value;
-		return `width:100%;height:${(ratio * 100).toFixed(2)}vw;`;
+		const avail = sysW.value - (60 * sysW.value) / 750; // 减去左右各 30rpx 内边距
+		const maxH = sysH.value * 0.42;
+		let w = avail;
+		let h = w * ratio;
+		if (h > maxH) {
+			h = maxH;
+			w = h / ratio;
+		}
+		return `width:${w.toFixed(0)}px;height:${h.toFixed(0)}px;`;
 	});
 
 	// —— 持久化 ——
@@ -204,7 +221,15 @@
 		} catch (e) {}
 	};
 
-	onLoad(() => restore());
+	onLoad(() => {
+		restore();
+		try {
+			const info = uni.getSystemInfoSync();
+			sysW.value = info.windowWidth || sysW.value;
+			sysH.value = info.windowHeight || sysH.value;
+			navTop.value = (info.statusBarHeight || 20) + 44; // app-nav-bar 默认导航高
+		} catch (e) {}
+	});
 
 	// 设置变更后：存本地 + 重画
 	const onChange = () => {
@@ -372,17 +397,21 @@
 		padding: 20rpx 30rpx 60rpx;
 	}
 	.wm-preview {
-		width: 100%;
-		border-radius: 16rpx;
-		overflow: hidden;
-		background: #1c1c1c;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 16rpx 30rpx;
+		background: #111111;
 	}
 	.wm-empty {
-		height: 400rpx;
+		width: 100%;
+		height: 360rpx;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		border-radius: 16rpx;
+		background: #1c1c1c;
 
 		&__t {
 			margin-top: 16rpx;
@@ -392,6 +421,7 @@
 	}
 	.wm-canvas {
 		display: block;
+		border-radius: 12rpx;
 	}
 	.wm-panel {
 		margin-top: 30rpx;
