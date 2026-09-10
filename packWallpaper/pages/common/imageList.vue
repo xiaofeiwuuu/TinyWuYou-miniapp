@@ -108,6 +108,12 @@
 		loadMore: true
 	});
 
+	// 请求序号：切分类时自增，让切换前还没返回的旧分类请求能识别出自己已经过期。
+	// 没有这个的话，旧分类的响应回来时会读到已经被新分类重置成 1 的 pageNum，
+	// 被误判成"第1页"直接覆盖掉刚显示出来的新分类图片——概率性地把图冲掉，
+	// 具体会不会触发只取决于新旧两个请求谁先返回。
+	let requestSeq = ref(0);
+
 	// 分页显示：总条数（后端返回）与实测单行高度，用来在「回到顶部」按钮上显示 当前页/总页数
 	let totalCount = ref(0);
 	let rowHeightPx = ref(0);
@@ -180,12 +186,14 @@
 		showBackTop.value = e.scrollTop > 600;
 	});
 
+	// 触底前 400px（见 pages.json 里这个页面的 onReachBottomDistance）就预加载下一页，
+	// 而不是等真正滚到底部才发请求，减少"刷到底卡一下"的等待感。
+	// loadingType !== 1 是防抖：放大了触发距离后，一次快速滑动可能在这段区间内多次
+	// 触发 onReachBottom，没有这个判断会把 pageNum 重复递增、漏页或并发多个请求。
 	onReachBottom(() => {
-		if (queryParams.value.loadMore) {
-			queryParams.value.pageNum++
-			setTimeout(() => {
-				initList()
-			}, 500)
+		if (queryParams.value.loadMore && queryParams.value.loadingType !== 1) {
+			queryParams.value.pageNum++;
+			initList();
 		}
 	});
 
@@ -212,6 +220,7 @@
 
 	// 初始化
 	const init = () => {
+		requestSeq.value++;
 		queryParams.value.pageNum = 1;
 		queryParams.value.loadMore = true;
 		list.value = [];
@@ -267,14 +276,26 @@
 			return;
 		}
 
+		// 请求发出前把这一刻的序号/分类/页码都固定下来：
+		// await 期间用户可能已经切了分类（init() 会让 requestSeq 自增），
+		// 响应回来后绝不能再去读 queryParams.value.pageNum / currentCategoryId.value 这些实时值——
+		// 它们此时可能已经被新分类的 init() 改掉了。
+		const seq = requestSeq.value;
+		const categoryId = currentCategoryId.value;
+		const pageNum = queryParams.value.pageNum;
+
 		queryParams.value.loadingType = 1;
 
 		try {
 			const res = await getImageList({
-				categoryId: currentCategoryId.value,
-				page: queryParams.value.pageNum,
+				categoryId,
+				page: pageNum,
 				pageSize: queryParams.value.pageSize
 			});
+
+			// 分类已经切换，这条响应过期了，不能再写 list/loadingType，
+			// 否则会把旧分类的图片覆盖到刚显示出来的新分类上（概率性，取决于新旧请求谁先回来）。
+			if (seq !== requestSeq.value) return;
 
 			if (res.code === 0) {
 				// 总条数（用于算总页数）；后端未返回时保持原值
@@ -292,7 +313,7 @@
 				}));
 
 				// 第一页覆盖，后续页追加
-				list.value = queryParams.value.pageNum === 1
+				list.value = pageNum === 1
 					? formattedData
 					: list.value.concat(formattedData);
 
@@ -314,6 +335,7 @@
 				queryParams.value.loadingType = 3;
 			}
 		} catch (error) {
+			if (seq !== requestSeq.value) return;
 			console.error('[ImageList] 加载异常:', error);
 			queryParams.value.loadingType = 3;
 		}
@@ -340,9 +362,12 @@
 		position: fixed;
 		right: 30rpx;
 		bottom: 120rpx;
-		// 竖向胶囊：窄宽 + 上下全圆角，箭头在上、页码在下
-		width: 64rpx;
-		padding: 18rpx 0;
+		// 竖向胶囊：窄宽 + 上下全圆角，箭头在上、页码在下。
+		// 用 min-width 而不是 width：页码是"当前/总页数"，图片多的分类总页数会到3位数
+		// （比如情侣头像 5671 张、每页20条，总页数284），固定宽度会把文字挤出胶囊。
+		min-width: 64rpx;
+		padding: 18rpx 10rpx;
+		box-sizing: border-box;
 		border-radius: 32rpx;
 		background-color: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(10px);
@@ -357,7 +382,8 @@
 			padding-top: 8rpx;
 			// 与箭头之间一条细分隔线，胶囊层次更清晰
 			border-top: 1rpx solid rgba(255, 255, 255, 0.25);
-			width: 40rpx;
+			min-width: 40rpx;
+			white-space: nowrap;
 			text-align: center;
 			font-size: 18rpx;
 			line-height: 1;
