@@ -26,8 +26,12 @@
 				</block>
 			</view>
 
-			<view v-if="picked" class="card fu-border fu-bg-main fu-b-r-10 fu-m-t-20">
-				<up-text text="修改为" color="#ffffff" size="28rpx" bold />
+			<!-- 常显:没选照片也能先看到能改哪些字段,建立信任;保存仍需先选照片 -->
+			<view class="card fu-border fu-bg-main fu-b-r-10 fu-m-t-20">
+				<view class="mod-head">
+					<up-text text="修改为" color="#ffffff" size="28rpx" bold />
+					<up-text v-if="!picked" text="选照片后可保存" color="#666666" size="22rpx" />
+				</view>
 
 				<view class="fu-m-t-10">
 					<!-- 机型：品牌 + 型号 两列联动 -->
@@ -127,7 +131,7 @@
 			<view v-if="picked" class="fu-m-t-40 fu-m-b-40">
 				<up-button
 					:disabled="!device || saving"
-					color="linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+					color="#ffffff"
 					shape="round" :customStyle="{ height: '88rpx' }"
 					@click="onSave"
 				><text style="color: #000000; font-size: 30rpx; font-weight: bold;">保存到相册</text></up-button>
@@ -383,6 +387,12 @@
 
 <style lang="scss" scoped>
 	.card { padding: 30rpx; }
+
+	.mod-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
 
 	.picker {
 		height: 200rpx;

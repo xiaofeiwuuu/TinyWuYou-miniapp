@@ -27,7 +27,7 @@
 		<app-nav-bar bgColor="rgba(0, 0, 0, 0.2)" leftIcon="arrow-left" color="#ffffff" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
 		<!-- 横图：图按窗口高度垂直居中，占满整行宽度 -->
-		<view v-if="orientation === 'landscape'" class="detail-landscape" :style="{ height: `${sysInfo.windowHeight}px` }">
+		<view v-if="orientation === 'landscape'" class="detail-landscape" :style="{ height: `${landscapeHeight}px` }">
 			<view class="detail-landscape__image">
 				<app-image width="100%" height="100%" bgColor="#222222" radius="15" :src="data.image"></app-image>
 				<view v-if="data.isVip" class="vip-badge">VIP</view>
@@ -117,6 +117,11 @@
 	let ready = ref(false);
 
 	const sysInfo = computed(() => $u.sys());
+	// 横图容器高度要减掉固定导航栏的占位(状态栏 + 44px 导航高),
+	// 否则「整屏高的图 + 导航占位」会让整页比屏幕高出一个导航栏,多出一段能往下滚的空白。
+	const landscapeHeight = computed(
+		() => (sysInfo.value.windowHeight || 0) - ((sysInfo.value.statusBarHeight || 0) + 44),
+	);
 	const orientation = computed(() => imageTypeStore.getOrientation(imageType.value));
 	const typeName = computed(() => imageTypeStore.getTypeName(imageType.value) || '图片');
 	const grid = computed(() => imageTypeStore.getGridConfig(imageType.value));

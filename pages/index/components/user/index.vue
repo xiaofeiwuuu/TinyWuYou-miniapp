@@ -137,9 +137,11 @@
 					>
 						<view class="fu-flex-1 fu-flex fu-flex-column-center fu-font-26 menu-item__content">
 							<view class="fu-flex-1 fu-flex fu-flex-column-center">
-								<!-- 同上：height="35" 会被放大成 70rpx，塞进 35rpx 的盒子里 -->
-								<view class="fu-w-35 fu-h-35 fu-m-r-20">
-									<app-image width="100%" height="100%" mode="aspectFit" bgColor="transparent" :src="item.icon"></app-image>
+								<!-- 有 iconName 用字体图标(风格统一、无需 PNG 素材);否则回退到原 PNG。
+								     同上：height="35" 会被放大成 70rpx，塞进 35rpx 的盒子里 -->
+								<view class="fu-w-35 fu-h-35 fu-m-r-20" style="display:flex;align-items:center;justify-content:center;">
+									<up-icon v-if="item.iconName" :name="item.iconName" color="#ffffff" size="36rpx"></up-icon>
+									<app-image v-else width="100%" height="100%" mode="aspectFit" bgColor="transparent" :src="item.icon"></app-image>
 								</view>
 								<text class="menu-item__text">{{ item.name }}</text>
 							</view>

@@ -20,12 +20,13 @@ export default {
 		{ name: '关于我们', icon: $mAssetsPath.user4, url: 'aboutUs' }
 	],
 	
+	// iconName 用 uview-plus 图标字体,四项各不相同、风格统一,不再依赖 PNG 素材
 	userRestEntrys: [
-		{ name: '在线客服', icon: $mAssetsPath.user5, openType: 'contact', isIcon: true },
-		{ name: '修改图片信息', icon: $mAssetsPath.user6, url: 'userExif', isIcon: true },
-		{ name: '图片加水印', icon: $mAssetsPath.user7, url: 'watermark', isIcon: true },
-		// { name: '我要吐槽', icon: $mAssetsPath.user6, url: 'feedback', isIcon: true },
-		// { name: '技术热线', icon: $mAssetsPath.user7, url: '', isIcon: false },
+		{ name: '在线客服', iconName: 'kefu-ermai', openType: 'contact', isIcon: true },
+		{ name: '修改图片信息', iconName: 'tags-fill', url: 'userExif', isIcon: true },
+		{ name: '图片加水印', iconName: 'grid-fill', url: 'watermark', isIcon: true },
+		{ name: '图片编辑', iconName: 'edit-pen-fill', url: 'imageEdit', isIcon: true },
+		// { name: '我要吐槽', iconName: 'chat-fill', url: 'feedback', isIcon: true },
 	],
 	
 	aboutUs: [

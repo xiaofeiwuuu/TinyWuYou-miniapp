@@ -5,15 +5,15 @@
 		<!-- 预览区在普通流里、不参与滚动（canvas 是原生组件，放进 fixed/sticky 里一滚动就会错位/丢内容）。
 		     页面本身不滚，只有下面的 scroll-view 内部滚动，预览就恒定不动。 -->
 		<view class="wm-preview">
-			<view v-if="!imgPath" class="wm-empty" @click="chooseImage">
+			<view v-if="!hasUserImg" class="wm-empty" @click="chooseImage">
 				<up-icon name="plus" color="#999999" :size="40"></up-icon>
 				<text class="wm-empty__t">点击选择图片</text>
 			</view>
-			<canvas type="2d" id="wmCanvas" class="wm-canvas" :style="canvasStyle"></canvas>
+			<canvas v-show="hasUserImg" type="2d" id="wmCanvas" class="wm-canvas" :style="canvasStyle"></canvas>
 		</view>
 
 		<!-- 控件区：只有这一块滚动，canvas 不受影响 -->
-		<scroll-view v-if="imgPath" scroll-y class="wm-scroll">
+		<scroll-view scroll-y class="wm-scroll">
 			<view class="wm-panel">
 				<!-- 水印文字 -->
 				<view class="wm-row">
@@ -113,11 +113,16 @@
 				</view>
 
 				<view class="wm-actions">
-					<up-button color="#333333" shape="round" :customStyle="{ flex: 1, height: '80rpx' }" @click="chooseImage">
-						<text style="color:#ffffff;">换一张</text>
-					</up-button>
-					<up-button color="#ffffff" shape="round" :customStyle="{ flex: 1, height: '80rpx', marginLeft: '20rpx' }" :loading="saving" @click="saveImage">
-						<text style="color:#000000;font-weight:bold;">保存到相册</text>
+					<template v-if="hasUserImg">
+						<up-button color="#333333" shape="round" :customStyle="{ flex: 1, height: '80rpx' }" @click="chooseImage">
+							<text style="color:#ffffff;">换一张</text>
+						</up-button>
+						<up-button color="#ffffff" shape="round" :customStyle="{ flex: 1, height: '80rpx', marginLeft: '20rpx' }" :loading="saving" @click="saveImage">
+							<text style="color:#000000;font-weight:bold;">保存到相册</text>
+						</up-button>
+					</template>
+					<up-button v-else color="#ffffff" shape="round" :customStyle="{ flex: 1, height: '80rpx' }" @click="chooseImage">
+						<text style="color:#000000;font-weight:bold;">选择图片</text>
 					</up-button>
 				</view>
 
@@ -156,6 +161,10 @@
 	const canvasW = ref(0);
 	const canvasH = ref(0);
 	const saving = ref(false);
+	const hasUserImg = ref(false); // false 时预览区只显示「选择图片」占位
+	// 导出格式跟随原图。canvas 只能吐 jpg / png 两种:jpg→jpg、png→png,
+	// 其余(webp/gif/bmp/判不出)无法原样保留,统一走 png(无损,不额外掉画质)
+	const imgType = ref('png');
 
 	// —— 可持久化的设置 ——
 	const text = ref('仅供本人使用');
@@ -171,6 +180,7 @@
 	);
 
 	let canvasNode = null;
+	let srcImg = null;      // 用户图片解码后的 Image,缓存复用
 
 	// 屏幕尺寸 & 导航栏高度（吸顶偏移用）
 	const sysW = ref(375);
@@ -178,6 +188,35 @@
 	const navTop = ref(64);
 
 	const rpx2px = (rpx) => (rpx * sysW.value) / 750;
+
+	// 读文件头几字节,靠 magic number 判真实格式(比扩展名 / getImageInfo 可靠)
+	const sniffFormat = (path) => {
+		try {
+			const buf = uni.getFileSystemManager().readFileSync(path, undefined, 0, 12);
+			const u8 = new Uint8Array(buf);
+			if (u8[0] === 0xff && u8[1] === 0xd8 && u8[2] === 0xff) return 'jpg';
+			if (u8[0] === 0x89 && u8[1] === 0x50 && u8[2] === 0x4e && u8[3] === 0x47) return 'png';
+			if (u8[0] === 0x47 && u8[1] === 0x49 && u8[2] === 0x46) return 'gif';
+			if (u8[0] === 0x42 && u8[1] === 0x4d) return 'bmp';
+			if (u8[0] === 0x52 && u8[1] === 0x49 && u8[2] === 0x46 && u8[3] === 0x46 &&
+				u8[8] === 0x57 && u8[9] === 0x45 && u8[10] === 0x42 && u8[11] === 0x50) return 'webp';
+		} catch (e) {}
+		return '';
+	};
+
+	// 真实格式 → canvas 支持的导出格式(只有 jpg / png)。
+	// 只有确认是 jpg 才导 jpg;png 导 png;其余无法原样保留,一律 png(无损)。
+	const detectType = (path, info) => {
+		let f = sniffFormat(path);
+		if (!f) {
+			const t = (info && info.type ? String(info.type) : '').toLowerCase();
+			if (t.includes('png')) f = 'png';
+			else if (t.includes('jpg') || t.includes('jpeg')) f = 'jpg';
+			else if (/\.png$/i.test(path || '')) f = 'png';
+			else if (/\.jpe?g$/i.test(path || '')) f = 'jpg';
+		}
+		return f === 'jpg' ? 'jpg' : 'png';
+	};
 
 	// 预览显示尺寸：等比缩放，同时受「面板宽度」和「最高 42% 屏高」约束，
 	// 保证竖图也不会占满整屏、下方设置能看见。
@@ -281,11 +320,14 @@
 					src: path,
 					success: (info) => {
 						imgPath.value = path;
+						hasUserImg.value = true;
+						imgType.value = detectType(path, info);
 						imgW.value = info.width;
 						imgH.value = info.height;
 						const scale = Math.min(1, MAX_EDGE / Math.max(info.width, info.height));
 						canvasW.value = Math.round(info.width * scale);
 						canvasH.value = Math.round(info.height * scale);
+						srcImg = null; // 换图,强制重新解码
 						setTimeout(render, 120);
 					},
 					fail: () => uni.showToast({ title: '读取图片失败', icon: 'none' }),
@@ -294,27 +336,41 @@
 		});
 	};
 
-	const render = () => {
-		if (!imgPath.value || !canvasW.value) return;
-		uni.createSelectorQuery()
-			.in(instance.proxy)
-			.select('#wmCanvas')
-			.fields({ node: true, size: true })
-			.exec((res) => {
-				const node = res && res[0] && res[0].node;
-				if (!node) return;
-				canvasNode = node;
-				node.width = canvasW.value;
-				node.height = canvasH.value;
-				const ctx = node.getContext('2d');
-				const img = node.createImage();
-				img.onload = () => {
-					ctx.clearRect(0, 0, canvasW.value, canvasH.value);
-					ctx.drawImage(img, 0, 0, canvasW.value, canvasH.value);
-					drawWatermark(ctx);
-				};
-				img.src = imgPath.value;
-			});
+	const ensureNode = () =>
+		new Promise((resolve) => {
+			if (canvasNode) return resolve(canvasNode);
+			uni.createSelectorQuery()
+				.in(instance.proxy)
+				.select('#wmCanvas')
+				.fields({ node: true })
+				.exec((res) => {
+					canvasNode = (res && res[0] && res[0].node) || null;
+					resolve(canvasNode);
+				});
+		});
+	// 绘制源:用户图片解码一次后缓存到 srcImg 复用
+	const ensureSrc = (node) =>
+		new Promise((resolve, reject) => {
+			if (srcImg) return resolve(srcImg);
+			if (!imgPath.value) return resolve(null);
+			const img = node.createImage();
+			img.onload = () => { srcImg = img; resolve(img); };
+			img.onerror = reject;
+			img.src = imgPath.value;
+		});
+
+	const render = async () => {
+		if (!canvasW.value) return;
+		const node = await ensureNode();
+		if (!node) return;
+		const src = await ensureSrc(node);
+		if (!src) return;
+		node.width = canvasW.value;
+		node.height = canvasH.value;
+		const ctx = node.getContext('2d');
+		ctx.clearRect(0, 0, canvasW.value, canvasH.value);
+		ctx.drawImage(src, 0, 0, canvasW.value, canvasH.value);
+		drawWatermark(ctx);
 	};
 
 	const drawWatermark = (ctx) => {
@@ -367,6 +423,7 @@
 	};
 
 	const saveImage = () => {
+		if (!hasUserImg.value) { chooseImage(); return; } // 还没选图,先引导选图
 		if (!canvasNode) {
 			uni.showToast({ title: '请先选择图片', icon: 'none' });
 			return;
@@ -374,6 +431,8 @@
 		saving.value = true;
 		uni.canvasToTempFilePath({
 			canvas: canvasNode,
+			fileType: imgType.value,          // 跟随原图:png 保透明,其余走 jpg
+			quality: imgType.value === 'jpg' ? 0.92 : 1, // quality 只对 jpg 生效
 			success: (r) => {
 				uni.saveImageToPhotosAlbum({
 					filePath: r.tempFilePath,
@@ -412,6 +471,7 @@
 		background: #111111;
 	}
 	.wm-preview {
+		position: relative;
 		flex-shrink: 0;
 		display: flex;
 		align-items: center;
