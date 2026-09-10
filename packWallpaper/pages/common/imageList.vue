@@ -12,7 +12,7 @@
 			<up-tabs :list="tabsList" :current="currentTabIndex" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="handleTabs" />
 		</up-sticky>
 
-		<view class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
+		<view id="il-content" class="fu-m-x-30 fu-m-t-20" style="color: #FFFFFF;">
 			<!-- 分类没有图片：显示"暂无数据"，而不是 jc-loading-more 的"已经到底了" -->
 			<view v-if="list.length === 0 && queryParams.loadingType !== 1" class="empty-tip">
 				暂无数据
@@ -189,6 +189,33 @@
 		initList();
 	};
 
+	/**
+	 * 内容不足一屏时自动补页。
+	 * 页面级 onReachBottom 只有在页面能滚动时才会触发；首屏图太少（如 4 列 × 5 行 = 20 张）
+	 * 撑不满一屏就永远滚不到底、加载不了后续。这里测量内容底部是否还在可视区内，是则再拉一页。
+	 */
+	const autoFillScreen = () => {
+		if (!queryParams.value.loadMore) return;
+		setTimeout(() => {
+			uni.createSelectorQuery()
+				.select('#il-content')
+				.boundingClientRect((rect) => {
+					if (!rect) return;
+					const wh = uni.getSystemInfoSync().windowHeight || 0;
+					// 内容底部仍在一屏之内（留 20px 容差）→ 页面不可滚动，继续补下一页
+					if (
+						rect.bottom <= wh + 20 &&
+						queryParams.value.loadMore &&
+						queryParams.value.loadingType !== 1
+					) {
+						queryParams.value.pageNum++;
+						initList();
+					}
+				})
+				.exec();
+		}, 300);
+	};
+
 	const initList = async () => {
 		if (!currentCategoryId.value) {
 			console.log('[ImageList] 分类ID为空，跳过加载');
@@ -228,6 +255,9 @@
 					queryParams.value.loadMore = false;
 				} else {
 					queryParams.value.loadingType = 0; // 加载完成
+					// 首屏内容不足一屏时页面不可滚动，onReachBottom 永远不触发（多列/大图时尤甚）。
+					// 这里主动测量：内容没填满一屏就自动补下一页，直到填满或没有更多。
+					autoFillScreen();
 				}
 			} else {
 				console.error('[ImageList] 加载失败:', res.message);
