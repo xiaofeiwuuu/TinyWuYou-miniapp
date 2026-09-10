@@ -7,7 +7,8 @@
 
 		<!-- 用 offsetTop 传实测导航高：u-sticky 只 watch offsetTop，onReady 更新后能触发重算；
 		     customNavHeight 置 0，避免叠加（stickyTop = offsetTop + customNavHeight） -->
-		<up-sticky bgColor="#111111" :offsetTop="customNavHeight" :customNavHeight="0">
+		<!-- 只有一个分类时不显示顶部分类 tab（连同吸顶背景条一起隐藏） -->
+		<up-sticky v-if="tabsList.length > 1" bgColor="#111111" :offsetTop="customNavHeight" :customNavHeight="0">
 			<up-tabs :list="tabsList" :current="currentTabIndex" activeStyle="#FFFFFF" inactiveStyle="#a7a7a7" lineColor="#FFFFFF" size="30" @click="handleTabs" />
 		</up-sticky>
 
