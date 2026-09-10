@@ -2,18 +2,17 @@
 	<view class="wm-page">
 		<app-nav-bar leftIcon="arrow-left" title="图片加水印" :border="false" fixed @clickLeft="$mUtil.overBack()"></app-nav-bar>
 
-		<!-- 预览区吸顶固定：调下面的设置时也能一直看到水印效果 -->
-		<up-sticky :offsetTop="navTop" bgColor="#111111">
-			<view class="wm-preview">
-				<view v-if="!imgPath" class="wm-empty" @click="chooseImage">
-					<up-icon name="plus" color="#999999" :size="40"></up-icon>
-					<text class="wm-empty__t">点击选择图片</text>
-				</view>
-				<canvas type="2d" id="wmCanvas" class="wm-canvas" :style="canvasStyle"></canvas>
+		<!-- 预览区固定在导航栏正下方，永远不随页面滚动；调下方设置时始终可见效果 -->
+		<view class="wm-preview" :style="{ top: navTop + 'px' }">
+			<view v-if="!imgPath" class="wm-empty" @click="chooseImage">
+				<up-icon name="plus" color="#999999" :size="40"></up-icon>
+				<text class="wm-empty__t">点击选择图片</text>
 			</view>
-		</up-sticky>
+			<canvas type="2d" id="wmCanvas" class="wm-canvas" :style="canvasStyle"></canvas>
+		</view>
 
-		<view class="wm-body">
+		<!-- 占位：把面板顶下去，正好接在固定预览下方 -->
+		<view class="wm-body" :style="{ paddingTop: previewBoxH + 'px' }">
 			<view v-if="imgPath" class="wm-panel">
 				<!-- 水印文字 -->
 				<view class="wm-row">
@@ -177,12 +176,14 @@
 	const sysH = ref(667);
 	const navTop = ref(64);
 
+	const rpx2px = (rpx) => (rpx * sysW.value) / 750;
+
 	// 预览显示尺寸：等比缩放，同时受「面板宽度」和「最高 42% 屏高」约束，
 	// 保证竖图也不会占满整屏、下方设置能看见。
-	const canvasStyle = computed(() => {
-		if (!canvasW.value) return 'width:0;height:0;';
+	const dispSize = computed(() => {
+		if (!canvasW.value) return { w: 0, h: 0 };
 		const ratio = canvasH.value / canvasW.value;
-		const avail = sysW.value - (60 * sysW.value) / 750; // 减去左右各 30rpx 内边距
+		const avail = sysW.value - rpx2px(60); // 减去左右各 30rpx 内边距
 		const maxH = sysH.value * 0.42;
 		let w = avail;
 		let h = w * ratio;
@@ -190,7 +191,19 @@
 			h = maxH;
 			w = h / ratio;
 		}
-		return `width:${w.toFixed(0)}px;height:${h.toFixed(0)}px;`;
+		return { w, h };
+	});
+
+	const canvasStyle = computed(() => {
+		if (!canvasW.value) return 'width:0;height:0;';
+		return `width:${dispSize.value.w.toFixed(0)}px;height:${dispSize.value.h.toFixed(0)}px;`;
+	});
+
+	// 固定预览区的总高度（含上下 16rpx 内边距）；面板用它做 padding-top 让内容接在下面
+	const previewBoxH = computed(() => {
+		const padPx = rpx2px(32 + 16); // 上下各 16rpx + 与面板的 16rpx 间距
+		if (!imgPath.value) return rpx2px(360) + padPx; // 空态占位盒高
+		return dispSize.value.h + padPx;
 	});
 
 	// —— 持久化 ——
@@ -397,6 +410,11 @@
 		padding: 20rpx 30rpx 60rpx;
 	}
 	.wm-preview {
+		position: fixed;
+		left: 0;
+		right: 0;
+		// top 由内联 style 按导航栏高度设置
+		z-index: 5; // 低于固定导航栏，高于滚动内容
 		display: flex;
 		align-items: center;
 		justify-content: center;
