@@ -189,6 +189,29 @@ async function request(options, retried = {}) {
 		}
 	}
 
+	// GET 请求也签名(不加密):防止 web / Python 脚本直接调用开放的 GET 接口。
+	// 签名内容与非 GET 一致(body 为空 → sha256('')),后端复用同一套校验。
+	if (needEncrypt && aesKey && method === 'GET') {
+		try {
+			const timestamp = Date.now().toString()
+			const nonce = CryptoUtil.generateNonce()
+			const path = `/api${url.split('?')[0]}`
+			headers['x-timestamp'] = timestamp
+			headers['x-nonce'] = nonce
+			headers['x-signature'] = CryptoUtil.buildSignature({
+				method,
+				path,
+				timestamp,
+				nonce,
+				body: '',
+				aesKey
+			})
+		} catch (error) {
+			console.error('[Request] GET 签名失败，中止请求:', error)
+			throw new Error('请求签名失败，已中止请求')
+		}
+	}
+
 	// 添加 token（如果存在）
 	const token = uni.getStorageSync('token')
 	if (token) {
